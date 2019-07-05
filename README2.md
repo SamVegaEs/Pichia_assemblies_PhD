@@ -1,14 +1,14 @@
 # pichia
 commands used in the assembly and annotation of Pichia genomes
 
-##Demultiplexing reads using Albacore. 
+##Demultiplexing reads using Albacore.
 Data was basecalled again using Albacore 2.3.3 on the minion server:
 
 
 ```bash
 screen -a  
 
-#Sceen -a opens a new session. 
+#Sceen -a opens a new session.
 
 ssh nanopore@nanopore
 
@@ -39,7 +39,7 @@ cd ~/Pichia_31_01_2019/$Date
   --reads_per_fastq_batch 4000 \
   --barcoding
 
-#Run the commmand ls to check that the folders actually exist. 
+#Run the commmand ls to check that the folders actually exist.
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq |wc -l
 
@@ -47,13 +47,13 @@ ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq |wc -l
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq |wc -l
 
-#Run each cat command individually and check that the output exists. 
+#Run each cat command individually and check that the output exists.
 
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode01.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode02.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode03.fastq.gz
 
-#Set the space where the output data will be. 
+#Set the space where the output data will be.
 
   OutDir=/data/scratch/nanopore_tmp_data/Pichia/albacore_v2.3.3
   mkdir -p $OutDir
