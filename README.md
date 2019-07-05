@@ -983,12 +983,12 @@ printf "$Name\t$Good\t$Bad\n";
 done
 done
 ```
-
+```bash
 Calb_mtDNA
 589     11      0
 591     11      0
 594     8       1
-
+```
 #Quast was run on the removed mtDNA:
 
 ```bash
@@ -1072,12 +1072,13 @@ Crypton=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'Crypton' |
 printf "$Organism\t$Strain\t$DDE_1\t$Gypsy\t$HAT\t$TY1_Copia\t$Mariner\t$Cacta\t$LINE\t$MuDR_A_B\t$HelitronORF\t$Mariner_ant1\t$ISC1316\t$Crypton\n"
 done
 ```
+```bash
+Output of previous run:
 
-# Output of previous run:
-
-# P.stipitis      589             13      1       99      1               13     14       8
-# P.stipitis      591             12      1       112     1       1       14     14       8
-# P.stipitis      594             13      1       108     1               14     14       8
+P.stipitis      589             13      1       99      1               13     14       8
+P.stipitis      591             12      1       112     1       1       14     14       8
+P.stipitis      594             13      1       108     1               14     14       8
+```
 
 #Quast and BUSCO
 
@@ -1105,12 +1106,13 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/run_*_contigs_unmasked/short
   echo -e "$Organism\t$Strain\t$Complete\t$Fragmented\t$Missing\t$Total"
   done
   ```
-
-#Output of Busco
+```bash
+Output of Busco
 
 # P.stipitis      589     1683    11      17      1711
 # P.stipitis      591     1678    14      19      1711
 # P.stipitis      594     1685    12      14      1711
+ ```
 
 ```bash
 for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
