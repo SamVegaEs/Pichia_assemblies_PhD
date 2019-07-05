@@ -872,13 +872,141 @@ done
 #The folder polished is not present, so I have to create it before going on with the Merging of both assemblies. 
 
 
+# Repeat the run of Quast and busco were run to assess the effects of pilon on assembly quality, but in this case using the data from  saccharomycetales_odb9, since it's Pichia's order. 
+
+
+```bash
+for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/*.fasta); do
+  Strain=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
+  Organism=$(echo $Assembly | rev | cut -f4 -d '/' | rev)  
+  echo "$Organism - $Strain"
+  # OutDir=$(dirname $Assembly)
+  # ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/quast
+  # qsub $ProgDir/sub_quast.sh $Assembly $OutDir
+  Jobs=$(qstat | grep 'sub_busco' | grep 'qw'| wc -l)
+  while [ $Jobs -gt 1 ]; do
+  sleep 1m
+  printf "."
+  Jobs=$(qstat | grep 'sub_busco' | grep 'qw'| wc -l)
+  done
+  printf "\n"
+  ProgDir=/home/armita/git_repos/emr_repos/tools/gene_prediction/busco
+  BuscoDB=$(ls -d /home/groups/harrisonlab/dbBusco/saccharomycetales_odb9)
+  # OutDir=gene_pred/busco/$Organism/$Strain/assembly
+  OutDir=$(dirname $Assembly)
+  qsub $ProgDir/sub_busco3.sh $Assembly $BuscoDB $OutDir
+done
+```
+
+```bash
+printf "Filename\tComplete\tDuplicated\tFragmented\tMissing\tTotal\n"
+for File in $(ls assembly/SMARTdenovo/*/*/pilon/*/short_summary_*.txt); do  
+FileName=$(basename $File)
+Complete=$(cat $File | grep "(C)" | cut -f2)
+Duplicated=$(cat $File | grep "(D)" | cut -f2)
+Fragmented=$(cat $File | grep "(F)" | cut -f2)
+Missing=$(cat $File | grep "(M)" | cut -f2)
+Total=$(cat $File | grep "Total" | cut -f2)
+printf "$FileName\t$Complete\t$Duplicated\t$Fragmented\t$Missing\t$Total\n"
+done
+```
+
+
+# Summary results:
+
+```bash
+short_summary_pilon_10.txt                      1683    13      11      17      1711
+short_summary_pilon_1.txt                       1682    13      12      17      1711
+short_summary_pilon_2.txt                       1683    13      11      17      1711
+short_summary_pilon_3.txt                       1683    13      11      17      1711
+short_summary_pilon_4.txt                       1683    13      11      17      1711
+short_summary_pilon_5.txt                       1683    13      11      17      1711
+short_summary_pilon_6.txt                       1683    13      11      17      1711
+short_summary_pilon_7.txt                       1683    13      11      17      1711
+short_summary_pilon_8.txt                       1683    13      11      17      1711
+short_summary_pilon_9.txt                       1683    13      11      17      1711
+short_summary_pilon_min_500bp_renamed.txt       1683    13      11      17      1711
+
+short_summary_pilon_10.txt                      1678    9       14      19      1711
+short_summary_pilon_1.txt                       1676    9       15      20      1711
+short_summary_pilon_2.txt                       1678    9       13      20      1711
+short_summary_pilon_3.txt                       1678    9       14      19      1711
+short_summary_pilon_4.txt                       1678    9       14      19      1711
+short_summary_pilon_5.txt                       1678    9       14      19      1711
+short_summary_pilon_6.txt                       1678    9       14      19      1711
+short_summary_pilon_7.txt                       1678    9       14      19      1711
+short_summary_pilon_8.txt                       1678    9       14      19      1711
+short_summary_pilon_9.txt                       1678    9       14      19      1711
+short_summary_pilon_min_500bp_renamed.txt       1678    9       14      19      1711
+
+short_summary_pilon_10.txt                      1685    5       12      14      1711
+short_summary_pilon_1.txt                       1684    5       13      14      1711
+short_summary_pilon_2.txt                       1685    5       12      14      1711
+short_summary_pilon_3.txt                       1685    5       12      14      1711
+short_summary_pilon_4.txt                       1685    5       12      14      1711
+short_summary_pilon_5.txt                       1685    5       12      14      1711
+short_summary_pilon_6.txt                       1685    5       12      14      1711
+short_summary_pilon_7.txt                       1685    5       12      14      1711
+short_summary_pilon_8.txt                       1685    5       12      14      1711
+short_summary_pilon_9.txt                       1685    5       12      14      1711
+short_summary_pilon_min_500bp_renamed.txt       1685    5       12      14      1711
+```
+
+#Remove mit. DNA
+
+#Using an exclusion database with deconseq:
+
+```bash
+ for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
+    Strain=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
+    Organism=$(echo $Assembly | rev | cut -f4 -d '/' | rev)
+    echo "$Organism - $Strain"
+    for Exclude_db in "Calb_mtDNA"; do
+      AssemblyDir=$(dirname $Assembly)
+      OutDir=$AssemblyDir/../deconseq_$Exclude_db
+      ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/remove_contaminants
+      qsub $ProgDir/sub_deconseq_no_retain.sh $Assembly $Exclude_db $OutDir
+    done
+  done
+```
+
+#Results were summarised using the commands:
+
+```bash
+for Exclude_db in "Calb_mtDNA"; do
+echo $Exclude_db
+for File in $(ls assembly/*/*/*/*/log.txt | grep "$Exclude_db"); do
+Name=$(echo $File | rev | cut -f3 -d '/' | rev);
+Good=$(cat $File |cut -f2 | head -n1 | tail -n1);
+Bad=$(cat $File |cut -f2 | head -n3 | tail -n1);
+printf "$Name\t$Good\t$Bad\n";
+done
+done
+```
+
+Calb_mtDNA
+589     11      0
+591     11      0
+594     8       1
+
+#Quast was run on the removed mtDNA:
+
+```bash
+for Assembly in $(ls assembly/SMARTdenovo/*/*/deconseq_Calb_mtDNA/*_cont.fa); do
+Strain=$(echo $Assembly | rev | cut -f2 -d '/' | rev)
+Organism=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
+OutDir=$(dirname $Assembly)
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/quast
+qsub $ProgDir/sub_quast.sh $Assembly $OutDir
+done
+```
 
 #Repeat Masking.
 #Repeat masking was done for the Nanopore assembly polished with Illumina data (SMARTdenovo).
 
 ```bash
-# for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
-  for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
+ # for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
+  for Assembly in $(ls assembly/SMARTdenovo/*/*/deconseq_Calb_mtDNA/contigs_min_500bp_filtered_renamed.fasta); do
     Organism=$(echo $Assembly | rev | cut -f4 -d '/' | rev)  
     Strain=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
     echo "$Organism - $Strain"
@@ -887,5 +1015,206 @@ done
     qsub $ProgDir/rep_modeling.sh $Assembly $OutDir
     qsub $ProgDir/transposonPSI.sh $Assembly $OutDir
   done
+```
+
+# The TransposonPSI masked bases were used to mask additional bases from the repeatmasker / repeatmodeller softmasked and hardmasked files.
+
+```bash
+for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked.fa); do
+OutDir=$(dirname $File)
+TPSI=$(ls $OutDir/*_contigs_unmasked.fa.TPSI.allHits.chains.gff3)
+OutFile=$(echo $File | sed 's/_contigs_softmasked.fa/_contigs_softmasked_repeatmasker_TPSI_appended.fa/g')
+echo "$OutFile"
+bedtools maskfasta -soft -fi $File -bed $TPSI -fo $OutFile
+echo "Number of masked bases:"
+cat $OutFile | grep -v '>' | tr -d '\n' | awk '{print $0, gsub("[a-z]", ".")}' | cut -f2 -d ' '
+done
+# The number of N's in hardmasked sequence are not counted as some may be present within the assembly and were therefore not repeatmasked.
+for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_hardmasked.fa); do
+OutDir=$(dirname $File)
+TPSI=$(ls $OutDir/*_contigs_unmasked.fa.TPSI.allHits.chains.gff3)
+OutFile=$(echo $File | sed 's/_contigs_hardmasked.fa/_contigs_hardmasked_repeatmasker_TPSI_appended.fa/g')
+echo "$OutFile"
+bedtools maskfasta -fi $File -bed $TPSI -fo $OutFile
+done
+```
+
+
+#Output of previous run:
+
+repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_softmasked_repeatmasker_TPSI_appended.fa
+Number of masked bases:
+520465
+repeat_masked/P.stipitis/591/filtered_contigs/591_contigs_softmasked_repeatmasker_TPSI_appended.fa
+Number of masked bases:
+591492
+repeat_masked/P.stipitis/594/filtered_contigs/594_contigs_softmasked_repeatmasker_TPSI_appended.fa
+Number of masked bases:
+539679
+
+```bash
+for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa.TPSI.allHits.chains.bestPerLocus.gff3); do
+Strain=$(echo $File| rev | cut -d '/' -f3 | rev)
+Organism=$(echo $File | rev | cut -d '/' -f4 | rev)
+# echo "$Organism - $Strain"
+DDE_1=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'DDE_1' | sed "s/^\s*//g" | cut -f1 -d ' ')
+Gypsy=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'gypsy' | sed "s/^\s*//g" | cut -f1 -d ' ')
+HAT=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'hAT' | sed "s/^\s*//g" | cut -f1 -d ' ')
+TY1_Copia=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'TY1_Copia' | sed "s/^\s*//g" | cut -f1 -d ' ')
+Mariner=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep -w 'mariner' | sed "s/^\s*//g" | cut -f1 -d ' ')
+Cacta=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'cacta' | sed "s/^\s*//g" | cut -f1 -d ' ')
+LINE=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'LINE' | sed "s/^\s*//g" | cut -f1 -d ' ')
+MuDR_A_B=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'MuDR_A_B' | sed "s/^\s*//g" | cut -f1 -d ' ')
+HelitronORF=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'helitronORF' | sed "s/^\s*//g" | cut -f1 -d ' ')
+Mariner_ant1=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'mariner_ant1' | sed "s/^\s*//g" | cut -f1 -d ' ')
+ISC1316=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'ISC1316' | sed "s/^\s*//g" | cut -f1 -d ' ')
+Crypton=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'Crypton' | sed "s/^\s*//g" | cut -f1 -d ' ')
+printf "$Organism\t$Strain\t$DDE_1\t$Gypsy\t$HAT\t$TY1_Copia\t$Mariner\t$Cacta\t$LINE\t$MuDR_A_B\t$HelitronORF\t$Mariner_ant1\t$ISC1316\t$Crypton\n"
+done
+```
+
+#Output of previous run:
+
+P.stipitis      589             13      1       99      1               13     14       8
+P.stipitis      591             12      1       112     1       1       14     14       8
+P.stipitis      594             13      1       108     1               14     14       8
+
+#Quast and BUSCO
+
+```bash
+for Assembly in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa); do
+Strain=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
+Organism=$(echo $Assembly | rev | cut -f4 -d '/' | rev)
+OutDir=$(dirname $Assembly)
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/quast
+qsub $ProgDir/sub_quast.sh $Assembly $OutDir
+ProgDir=/home/armita/git_repos/emr_repos/tools/gene_prediction/busco
+BuscoDB=$(ls -d /home/groups/harrisonlab/dbBusco/saccharomycetales_odb9)
+OutDir=$(dirname $Assembly)
+qsub $ProgDir/sub_busco3.sh $Assembly $BuscoDB $OutDir
+done
+```
+```bash
+for File in $(ls repeat_masked/*/*/filtered_contigs/run_*_contigs_unmasked/short_summary_*.txt); do
+  Strain=$(echo $File| rev | cut -d '/' -f4 | rev)
+  Organism=$(echo $File | rev | cut -d '/' -f5 | rev)
+  Complete=$(cat $File | grep "(C)" | cut -f2)
+  Fragmented=$(cat $File | grep "(F)" | cut -f2)
+  Missing=$(cat $File | grep "(M)" | cut -f2)
+  Total=$(cat $File | grep "Total" | cut -f2)
+  echo -e "$Organism\t$Strain\t$Complete\t$Fragmented\t$Missing\t$Total"
+  done
+  ```
+
+#Output of Busco
+
+P.stipitis      589     1683    11      17      1711
+P.stipitis      591     1678    14      19      1711
+P.stipitis      594     1685    12      14      1711
+
+```bash
+for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
+  Strain=$(echo $File| rev | cut -d '/' -f3 | rev)
+  Organism=$(echo $File | rev | cut -d '/' -f4 | rev)
+  Contigs=$(cat $File | grep "contigs (>= 0 bp)" | cut -f2)
+  Length=$(cat $File | grep "Total length (>= 0 bp)" | cut -f2)
+  Largest=$(cat $File | grep "Largest contig" | cut -f2)
+  N50=$(cat $File | grep "N50" | cut -f2)
+  echo -e "$Organism\t$Strain\t$Contigs\t$Length\t$Largest\t$N50"
+  done
+   ```
+
+#Output:
+
+P.stipitis      589     11      15681772        2691698 1880751
+P.stipitis      591     11      15602566        3982952 1903767
+P.stipitis      594     8       15273029        3437457 1897630
+
+
+#Promer alignment of Assemblies.
+
+#Alignment of our assemblies against the reference S. stipitis genome (AB580, Y-11545_v2)
+
+```bash
+Reference=$(ls assembly/misc_publications/P.stipitis/Y-11545_v2/pichia.allmasked)
+for Query in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_hardmasked.fa); do
+Strain=$(echo $Query | rev | cut -f3 -d '/' | rev)
+Organism=$(echo $Query | rev | cut -f4 -d '/' | rev)
+echo "$Organism - $Strain"
+Prefix="$Strain"_vs_Y-11454_v2
+OutDir=analysis/genome_alignment/mummer/$Organism/$Strain/$Prefix
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/MUMmer
+qsub $ProgDir/sub_nucmer.sh $Reference $Query $Prefix $OutDir
+done
+```
+#Alignment of all our assemblies against the assembly done for 589
+
+```bash
+Reference=$(ls repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_hardmasked.fa)
+for Query in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_hardmasked.fa); do
+Strain=$(echo $Query | rev | cut -f3 -d '/' | rev)
+Organism=$(echo $Query | rev | cut -f4 -d '/' | rev)
+echo "$Organism - $Strain"
+Prefix="$Strain"_vs_589
+OutDir=analysis/genome_alignment/mummer/$Organism/$Strain/$Prefix
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/MUMmer
+qsub $ProgDir/sub_nucmer.sh $Reference $Query $Prefix $OutDir
+done
+```
+
+#Alignment of all our assemblies against the assembly done for 591
+
+```bash
+Reference=$(ls repeat_masked/P.stipitis/591/*/591_contigs_hardmasked.fa)
+for Query in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_hardmasked.fa); do
+Strain=$(echo $Query | rev | cut -f3 -d '/' | rev)
+Organism=$(echo $Query | rev | cut -f4 -d '/' | rev)
+echo "$Organism - $Strain"
+Prefix="$Strain"_vs_591
+OutDir=analysis/genome_alignment/mummer/$Organism/$Strain/$Prefix
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/MUMmer
+qsub $ProgDir/sub_nucmer.sh $Reference $Query $Prefix $OutDir
+done
+```
+
+#Alignment of all our assemblies against the assembly done for 594
+
+```bash
+Reference=$(ls repeat_masked/P.stipitis/594/*/594_contigs_hardmasked.fa)
+for Query in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_hardmasked.fa); do
+Strain=$(echo $Query | rev | cut -f3 -d '/' | rev)
+Organism=$(echo $Query | rev | cut -f4 -d '/' | rev)
+echo "$Organism - $Strain"
+Prefix="$Strain"_vs_594
+OutDir=analysis/genome_alignment/mummer/$Organism/$Strain/$Prefix
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/MUMmer
+qsub $ProgDir/sub_nucmer.sh $Reference $Query $Prefix $OutDir
+done
+```
+
+
+#Alignment of S. stipitis raw reads vs reference genome.
+
+#####################################
+## All against reference genome.  ###
+#####################################
+
+#Alignment of reads from a single run:
+
+```bash
+for Reference in $(ls assembly/misc_publications/P.stipitis/Y-11545_v2/pichia.allmasked); do
+for StrainPath in $(ls -d qc_dna/paired/P.stipitis/*); do
+Strain=$(echo $StrainPath | rev | cut -f1 -d '/' | rev)
+Organism=$(echo $StrainPath | rev | cut -f2 -d '/' | rev)
+F_Read=$(ls $StrainPath/F/*_trim.fq.gz)
+R_Read=$(ls $StrainPath/R/*_trim.fq.gz)
+echo $F_Read
+echo $R_Read
+Prefix="${Organism}_${Strain}"
+OutDir=analysis/genome_alignment/bwa/$Organism/$Strain/vs_${Reference}
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/bwa
+qsub $ProgDir/sub_bwa.sh $Prefix $Reference $F_Read $R_Read $OutDir
+done
+done
 ```
 
