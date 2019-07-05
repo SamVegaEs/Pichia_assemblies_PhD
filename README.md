@@ -1039,8 +1039,8 @@ bedtools maskfasta -fi $File -bed $TPSI -fo $OutFile
 done
 ```
 
-
-#Output of previous run:
+```bash
+Output of previous run:
 
 repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_softmasked_repeatmasker_TPSI_appended.fa
 Number of masked bases:
@@ -1051,7 +1051,7 @@ Number of masked bases:
 repeat_masked/P.stipitis/594/filtered_contigs/594_contigs_softmasked_repeatmasker_TPSI_appended.fa
 Number of masked bases:
 539679
-
+```
 ```bash
 for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa.TPSI.allHits.chains.bestPerLocus.gff3); do
 Strain=$(echo $File| rev | cut -d '/' -f3 | rev)
@@ -1125,13 +1125,13 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
   echo -e "$Organism\t$Strain\t$Contigs\t$Length\t$Largest\t$N50"
   done
    ```
-
-#Output:
+```bash
+Output:
 
 P.stipitis      589     11      15681772        2691698 1880751
 P.stipitis      591     11      15602566        3982952 1903767
 P.stipitis      594     8       15273029        3437457 1897630
-
+```
 
 #Promer alignment of Assemblies.
 
