@@ -1,17 +1,17 @@
 # pichia
 commands used in the assembly and annotation of Pichia genomes
 
-##Demultiplexing reads using Albacore. 
+##Demultiplexing reads using Albacore.
 Data was basecalled again using Albacore 2.3.3 on the minion server:
 
-#The programs were run in: 
+#The programs were run in:
 
 cd /home/groups/harrisonlab/project_files/Pichia
 
 ```bash
 screen -a  
 
-#Sceen -a opens a new session. 
+#Sceen -a opens a new session.
 
 ssh nanopore@nanopore
 
@@ -42,7 +42,7 @@ cd ~/Pichia_31_01_2019/$Date
   --reads_per_fastq_batch 4000 \
   --barcoding
 
-#Run the commmand ls to check that the folders actually exist. 
+#Run the commmand ls to check that the folders actually exist.
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq |wc -l
 
@@ -50,13 +50,13 @@ ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq |wc -l
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq |wc -l
 
-#Run each cat command individually and check that the output exists. 
+#Run each cat command individually and check that the output exists.
 
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode01.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode02.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode03.fastq.gz
 
-#Set the space where the output data will be. 
+#Set the space where the output data will be.
 
   OutDir=/data/scratch/nanopore_tmp_data/Pichia/albacore_v2.3.3
   mkdir -p $OutDir
@@ -119,7 +119,7 @@ cd $ProjDir
 
 #ASSEMBLY.
 
-#Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node. 
+#Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node.
 
 
 ```bash
@@ -159,7 +159,7 @@ done
 ```
 
 ```
-Coverage. 
+Coverage.
 
 589     186.88
 591     145.17
@@ -354,7 +354,7 @@ short_summary_594_smartdenovo_racon_round_9.txt   946     0       178     191   
 short_summary_racon_min_500bp_renamed.txt         950     1       170     195    1315
 ```
 
-#After problems running the tar command we ran it again from inside the nanopore node. 
+#After problems running the tar command we ran it again from inside the nanopore node.
 
 ```bash
 screen -a
@@ -368,10 +368,10 @@ chmod +rw $OutDir/Pichia_albacore_v2.3.3_demultiplexed.tar.gz
 tar -cz -f $OutDir/Pichia_albacore_v2.3.3_demultiplexed.tar.gz Pichia_albacore_v2.3.3_demultiplexed
 
 ```
-#To check if the tar command is still running we have to resume the screen in which it was running. 
+#To check if the tar command is still running we have to resume the screen in which it was running.
 
 
-#ASSEMBLY CORRECTION USING NANOPOLISH. 
+#ASSEMBLY CORRECTION USING NANOPOLISH.
 
 #Fast5 files are very large and need to be stored as gzipped tarballs. These needed temporarily unpacking but must be deleted after nanpolish has finished running.
 
@@ -482,7 +482,7 @@ done
 done
 ```
 
-# When the code for splitting was running we had to stop it. To take it from where it stopped and not from the beginning: 
+# When the code for splitting was running we had to stop it. To take it from where it stopped and not from the beginning:
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/racon2_10/racon_min_500bp_renamed.fasta); do
 Strain=$(echo $Assembly | rev | cut -f3 -d '/' | rev)
@@ -652,7 +652,7 @@ qsub $ProgDir/sub_pilon.sh $Assembly $TrimF1_Read $TrimR1_Read $OutDir $Iteratio
 done
 ```
 
-# Contigs were renamed. 
+# Contigs were renamed.
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/*.fasta | grep 'pilon_10'); do
@@ -869,10 +869,10 @@ done
   done
 ```
 
-#The folder polished is not present, so I have to create it before going on with the Merging of both assemblies. 
+#The folder polished is not present, so I have to create it before going on with the Merging of both assemblies.
 
 
-# Repeat the run of Quast and busco were run to assess the effects of pilon on assembly quality, but in this case using the data from  saccharomycetales_odb9, since it's Pichia's order. 
+# Repeat the run of Quast and busco were run to assess the effects of pilon on assembly quality, but in this case using the data from  saccharomycetales_odb9, since it's Pichia's order.
 
 
 ```bash
@@ -1105,14 +1105,14 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/run_*_contigs_unmasked/short
   Total=$(cat $File | grep "Total" | cut -f2)
   echo -e "$Organism\t$Strain\t$Complete\t$Fragmented\t$Missing\t$Total"
   done
-  ```
+```
 ```bash
 Output of Busco
 
 # P.stipitis      589     1683    11      17      1711
 # P.stipitis      591     1678    14      19      1711
 # P.stipitis      594     1685    12      14      1711
- ```
+```
 
 ```bash
 for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
@@ -1124,7 +1124,7 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
   N50=$(cat $File | grep "N50" | cut -f2)
   echo -e "$Organism\t$Strain\t$Contigs\t$Length\t$Largest\t$N50"
   done
-   ```
+```
 ```bash
 Output:
 
@@ -1149,6 +1149,9 @@ ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment/MUMmer
 qsub $ProgDir/sub_nucmer.sh $Reference $Query $Prefix $OutDir
 done
 ```
+
+
+
 #Alignment of all our assemblies against the assembly done for 589
 
 ```bash
@@ -1219,4 +1222,3 @@ qsub $ProgDir/sub_bwa.sh $Prefix $Reference $F_Read $R_Read $OutDir
 done
 done
 ```
-
