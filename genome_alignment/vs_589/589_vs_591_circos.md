@@ -50,7 +50,7 @@ cat $OutDir/query_ref_genome.txt | grep -w -v -f tmp.txt | cut -f3 -d ' '| tr -d
 # , 591_contig_1, 591_contig_2, 591_contig_3, 591_contig_4, 591_contig_5, 591_conig_6, 591_contig_7, 591_contig_8, 591_contig_9, 591_contig_10, 591_contig_11, 5
 
 ```bash
-ProgDir=~/git_repos/scripts/pichia/genome_alignment/vs_589/591
+ProgDir=~/git_repos/scripts/pichia/genome_alignment/vs_589
 circos -conf $ProgDir/589_vs_591_circos.conf -outputdir $OutDir
 mv $OutDir/circos.png $OutDir/589_vs_591_circos.png
 mv $OutDir/circos.svg $OutDir/589_vs_591_circos.svg
