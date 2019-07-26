@@ -26,7 +26,7 @@ tac $OutDir/ref_genome.txt >> $OutDir/query_ref_genome.txt
 OutDir=589_vs_594_circos
 Coords=$(ls analysis/genome_alignment/mummer/P.stipitis/589/589_vs_594/589_vs_594_coords.tsv)
 ProgDir=/home/armita/git_repos/emr_repos/scripts/alternaria/pathogen/genome_alignment
-$ProgDir/nucmer_coords2circos.py --inp_coords $Coords --queery_id 594 --ref_id 589 > $OutDir/query_vs_ref_links.txt
+$ProgDir/nucmer_coords2circos.py --inp_coords $Coords --queery_id 589 --ref_id 594 > $OutDir/query_vs_ref_links.txt
 cat $OutDir/query_vs_ref_links.txt > $OutDir/query_vs_ref_links_edited.txt
 ```
 
@@ -54,7 +54,7 @@ cat $OutDir/query_ref_genome.txt | grep -w -v -f tmp.txt | cut -f3 -d ' '| tr -d
 # , 594_contig_1, 594_contig_2, 594_contig_3, 594_contig_4, 594_contig_5, 594_contig_6, 594_contig_7, 594_contig_8, 589_contig_11
 
 ```bash
-ProgDir=/home/armita/git_repos/emr_repos/scripts/pichia/genome_alignment/vs_589
+ProgDir=~/git_repos/emr_repos/scripts/pichia/genome_alignment/vs_589
 circos -conf $ProgDir/589_vs_594_circos.conf -outputdir $OutDir
 mv $OutDir/circos.png $OutDir/589_vs_594_circos.png
 mv $OutDir/circos.svg $OutDir/589_vs_594_circos.svg
