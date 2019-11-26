@@ -19,13 +19,13 @@
 Reference=$1
 Isolate=$2
 
-# Project=/home/groups/harrisonlab/project_files/idris
+# Project=/home/groups/harrisonlab/project_files/Pichia
 Project=/home/groups/harrisonlab/project_files/Pichia
 # OutDir=analysis/popgen/SNP_calling
 OutDir=vs_${Isolate}
 mkdir $OutDir
-# Reference=$(ls /home/groups/harrisonlab/project_files/idris/repeat_masked/P.cactorum/414/filtered_contigs_repmask/414_contigs_unmasked.fa)
-# Reference=$(ls /data/scratch/armita/idris/repeat_masked/P.cactorum/414/filtereed_contigs_repmask/414_contigs_softmasked_repeatmasker_TPSI_appended.fa)
+# Reference=$(ls /home/groups/harrisonlab/project_files/Pichia/repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_unmasked.fa)
+# Reference=$(ls /home/groups/harrisonlab/project_files/Pichia/repeat_masked/P.stipitis/589/filtereed_contigs/589_contigs_softmasked_repeatmasker_TPSI_appended.fa)
 
 
 RefName=$(basename "$Reference")
