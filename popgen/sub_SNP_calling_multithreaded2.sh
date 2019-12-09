@@ -40,9 +40,9 @@ java -jar $ProgDir/GenomeAnalysisTK.jar \
      -ploidy 1 \
      -nct 15 \
      --allow_potentially_misencoded_quality_scores \
-     -I $Project/analysis/popgen/P.stipitis/589/589_vs_589_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
-     -I $Project/analysis/popgen/P.stipitis/589/589_vs_591_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
-     -I $Project/analysis/popgen/P.stipitis/589/589_vs_594_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam
+     -I $Project/analysis/popgen/P.stipitis/589/589_vs_${Isolate}_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
+     -I $Project/analysis/popgen/P.stipitis/589/589_vs_${Isolate}_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
+     -I $Project/analysis/popgen/P.stipitis/589/589_vs_${Isolate}_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam
      -o $Out1
 
 #Break down complex SNPs into primitive ones with VariantsToAllelicPrimitives
@@ -60,5 +60,6 @@ java -jar $ProgDir/GenomeAnalysisTK.jar \
 
 # http://gatkforums.broadinstitute.org/gatk/discussion/1975/how-can-i-use-parallelism-to-make-gatk-tools-run-faster
 (END)
+
 
 ```
