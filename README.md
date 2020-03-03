@@ -362,7 +362,7 @@ short_summary_594_smartdenovo_racon_round_9.txt   946     0       178     191   
 short_summary_racon_min_500bp_renamed.txt         950     1       170     195    1315
 ```
 
-#After problems running the tar command we ran it again from inside the nanopore node.
+# ASSEMBLY CORRECTION USING NANOPOLISH.
 
 ```bash
 screen -a
@@ -375,14 +375,13 @@ chmod +rw $OutDir/Pichia_albacore_v2.3.3_demultiplexed.tar.gz
 
 tar -cz -f $OutDir/Pichia_albacore_v2.3.3_demultiplexed.tar.gz Pichia_albacore_v2.3.3_demultiplexed
 ```
+After problems running the tar command we ran it again from inside the nanopore node.
 
-#To check if the tar command is still running we have to resume the screen in which it was running.
+To check if the tar command is still running we have to resume the screen in which it was running.
 
-#ASSEMBLY CORRECTION USING NANOPOLISH.
+Fast5 files are very large and need to be stored as gzipped tarballs. These needed temporarily unpacking but must be deleted after nanpolish has finished running.
 
-#Fast5 files are very large and need to be stored as gzipped tarballs. These needed temporarily unpacking but must be deleted after nanpolish has finished running.
-
-#Raw reads were moved onto the cluster scratch space for this step and unpacked:
+Raw reads were moved onto the cluster scratch space for this step and unpacked:
 
 ```bash
 screen -a
@@ -394,7 +393,7 @@ for Tar in $(ls /data/scratch/nanopore_tmp_data/Alternaria/albacore_v2.1.10/Pich
 done
 ```
 
-# When you try to run this part in a screen session it asks for an update in certain programs required to run nanopolish, so do not run it in screen.
+When you try to run this part in a screen session it asks for an update in certain programs required to run nanopolish, so do not run it in screen.
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/589/racon2_10/racon_min_500bp_renamed.fasta); do
@@ -455,7 +454,7 @@ ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/nanopolish
 done
 ```
 
-Split the assembly into 50Kb fragments an submit each to the cluster for nanopolish correction
+1. Split the assembly into 50Kb fragments an submit each to the cluster for nanopolish correction
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/racon2_10/racon_min_500bp_renamed.fasta); do
@@ -487,7 +486,7 @@ done
 done
 ```
 
-When the code for splitting was running we had to stop it. To take it from where it stopped and not from the beginning:
+1.2 When the code for splitting was running we had to stop it. To take it from where it stopped and not from the beginning:
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/racon2_10/racon_min_500bp_renamed.fasta); do
@@ -537,7 +536,7 @@ $ProgDir/remove_contaminants.py --keep_mitochondria --inp $OutDir/"$Strain"_nano
 done
 ```
 
-Quast and busco were run to assess the effects of nanopolish on assembly quality:
+2. Quast and busco were run to assess the effects of nanopolish on assembly quality:
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/nanopolish/*_nanoplish_min_500bp_renamed.fasta); do
@@ -554,7 +553,7 @@ ProgDir=/home/armita/git_repos/emr_repos/tools/gene_prediction/busco
 qsub $ProgDir/sub_busco3.sh $Assembly $BuscoDB $OutDir
 done
 ```
-For Pilon assembly correction we need the Illumina data, and we don't have them yet in our working directory. We need to copy them there.
+3. For Pilon assembly correction we need the Illumina data, and we don't have them yet in our working directory. We need to copy them there.
 
 ```bash
 RawDatDir=/data/seq_data/miseq/2018/RAW/181026_M04465_0088_000000000-C5M4V/Data/Intensities/BaseCalls
@@ -616,7 +615,7 @@ RawDatDir=/data/seq_data/miseq/2018/RAW/181026_M04465_0088_000000000-C5M4V/Data/
   cd $ProjectDir
 ```
 
-QC of MiSeq Data.
+4. QC of MiSeq Data.
 
 programs: fastqc fastq-mcf kmc
 
@@ -641,8 +640,7 @@ for StrainPath in $(ls -d raw_dna/paired/*/*); do
   done
 ```
 
-Pilon assembly correction
-Assemblies were polished using Pilon
+5. Pilon assembly correction: Assemblies were polished using Pilon
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/nanopolish/*_nanoplish_min_500bp_renamed.fasta); do
@@ -659,7 +657,7 @@ qsub $ProgDir/sub_pilon.sh $Assembly $TrimF1_Read $TrimR1_Read $OutDir $Iteratio
 done
 ```
 
-Contigs were renamed.
+6. Contigs were renamed.
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/*.fasta | grep 'pilon_10'); do
@@ -671,7 +669,7 @@ $ProgDir/remove_contaminants.py --keep_mitochondria --inp $Assembly --out $OutDi
 done
 ```
 
-Quast and busco were run to assess the effects of pilon on assembly quality:
+7. Quast and busco were run to assess the effects of pilon on assembly quality:
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/*.fasta); do
@@ -709,7 +707,7 @@ printf "$FileName\t$Complete\t$Duplicated\t$Fragmented\t$Missing\t$Total\n"
 done
 ```
 
-Summary results:
+Summary results of Busco run:
 
 ```bash
 short_summary_pilon_10.txt                      1290    11      5       20      1315
@@ -749,7 +747,7 @@ short_summary_pilon_9.txt                       1288    1       5       22      
 short_summary_pilon_min_500bp_renamed.txt       1288    1       5       22      1315
 ```
 
-# To get the information about the total length of the genome, and the number of contigs we have we use this command:  
+To get the information about the total length of the genome, and the number of contigs we have we use this command:  
 
 ```bash
 for File in $(ls assembly/SMARTdenovo/P.stipitis/*/racon2_10/report.txt); do
@@ -811,9 +809,9 @@ L75                        5
 # N's per 100 kbp          0.00
 ```
 
-HYBRID ASSEMBLY.
+# HYBRID ASSEMBLY.
 
-Spades Assembly
+1. Spades Assembly
 
 ```bash
 for TrimReads in $(ls ../../../../../home/groups/harrisonlab/project_files/Pichia/raw_dna/minion/*/*/*.fastq.gz); do
@@ -830,7 +828,7 @@ qsub $ProgDir/sub_spades_minion.sh $TrimReads $TrimF1_Read $TrimR1_Read $OutDir
 done
 ```
 
-Contigs shorter than 500bp were removed from the assembly.
+2. Contigs shorter than 500bp were removed from the assembly.
 
 ```bash
 for Contigs in $(ls assembly/spades_minion/*/*/contigs.fasta); do
@@ -841,7 +839,7 @@ for Contigs in $(ls assembly/spades_minion/*/*/contigs.fasta); do
   done
 ```
 
-Quast and BUSCO
+3. Quast and BUSCO
 
 ```bash
 for Assembly in $(ls assembly/spades_minion/*/*/filtered_contigs/contigs_min_500bp.fasta); do
@@ -875,7 +873,9 @@ To do yet:
 
 The folder polished is not present, so I have to create it before going on with the Merging of both assemblies.
 
+NOTE: HYBRID ASSEMBBLY was stopped at this point. The rest is yet to do in case we are interested in the future. 
 
+# Re-run BUSCO
 
 Repeat the run of Quast and busco were run to assess the effects of pilon on assembly quality, but in this case using the data from saccharomycetales_odb9, since it's Pichia's order.
 
@@ -955,9 +955,9 @@ short_summary_pilon_9.txt                       1685    5       12      14      
 short_summary_pilon_min_500bp_renamed.txt       1685    5       12      14      1711
 ```
 
-Remove mit. DNA
+# Removal of mit. DNA
 
-Using an exclusion database with deconseq:
+1. Using an exclusion database with deconseq:
 
 ```bash
  for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
@@ -994,7 +994,7 @@ Calb_mtDNA
 594     8       1
 ```
 
-Quast was run on the removed mtDNA:
+2. Quast was run on the removed mtDNA:
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/deconseq_Calb_mtDNA/*_cont.fa); do
@@ -1006,7 +1006,9 @@ qsub $ProgDir/sub_quast.sh $Assembly $OutDir
 done
 ```
 
-Repeat Masking. Repeat masking was done for the Nanopore assembly polished with Illumina data (SMARTdenovo).
+# Repeat Masking. 
+
+Repeat masking was done for the Nanopore assembly polished with Illumina data (SMARTdenovo).
 
 ```bash
  # for Assembly in $(ls assembly/SMARTdenovo/*/*/pilon/pilon_min_500bp_renamed.fasta); do
@@ -1076,14 +1078,13 @@ Crypton=$(cat $File | cut -f9 | cut -f2 -d';' | sort| uniq -c | grep 'Crypton' |
 printf "$Organism\t$Strain\t$DDE_1\t$Gypsy\t$HAT\t$TY1_Copia\t$Mariner\t$Cacta\t$LINE\t$MuDR_A_B\t$HelitronORF\t$Mariner_ant1\t$ISC1316\t$Crypton\n"
 done
 ```
-
-
+```
 Output of previous run:
 
 P.stipitis      589             13      1       99      1               13     14       8
 P.stipitis      591             12      1       112     1       1       14     14       8
 P.stipitis      594             13      1       108     1               14     14       8
-
+```
 
 Quast and BUSCO
 
@@ -1113,14 +1114,13 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/run_*_contigs_unmasked/short
   done
 ```
 
-
-
 Output of BUSCO:
 
+```
 P.stipitis      589     1683    11      17      1711
 P.stipitis      591     1678    14      19      1711
 P.stipitis      594     1685    12      14      1711
-
+```
 
 ```bash
 for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
@@ -1134,14 +1134,14 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/report.tsv); do
   done
 ```
 
-Output:
-
+Output of general data:
+```
 P.stipitis      589     11      15681772        2691698 1880751
 P.stipitis      591     11      15602566        3982952 1903767
 P.stipitis      594     8       15273029        3437457 1897630
+```
 
-
-Promer alignment of Assemblies.
+# Promer alignment of Assemblies.
 
 Alignment of our assemblies against the reference S. stipitis genome (AB580, Y-11545_v2)
 
@@ -1221,12 +1221,9 @@ qsub $ProgDir/sub_bwa.sh $Prefix $Reference $F_Read $R_Read $OutDir
 done
 done
 ```
+# Read coverage
 
-
-
-Read coverage
-
-Identify read coverage over each bp for Illumina alignments.
+1. Identify read coverage over each bp for Illumina alignments.
 
 ```bash
   for Bam in $(ls analysis/genome_alignment/bwa/*/*/vs_*/*_sorted.bam); do
@@ -1240,6 +1237,88 @@ Identify read coverage over each bp for Illumina alignments.
     sed -i "s/$/\t$Strain/g" $OutDir/${Organism}_${Strain}_depth_10kb.tsv
   done
 ```
+
+2. Coverage of Nanopore reads over Assembly.
+
+For the alignment of ONT reads versus Nanopore assembly use the program minimap:
+
+```bash
+#!/bin/bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -pe smp 16
+#$ -l virtual_free=1G
+#$ -l h=blacklace02.blacklace|blacklace03.blacklace|blacklace04.blacklace|blacklace05.blacklace|blacklace06.blacklace|blacklace07.blacklace|blacklace08.blacklace|blacklace09.blacklace|blacklace10.blacklace
+
+#Align raw reads to an assembly.
+
+# ---------------
+# Step 1
+# Collect inputs
+# ---------------
+
+Assembly=$(basename $1)
+Reads=$(basename $2)
+OutDir=$3
+
+
+CurDir=$PWD
+echo  "Running Bowtie with the following inputs:"
+echo "Assembly - $Assembly"
+echo "Reads - $Reads"
+echo "OutDir - $OutDir"
+
+# ---------------
+# Step 2
+# Copy data
+# ---------------
+
+WorkDir=$TMPDIR/minimap2
+mkdir -p $WorkDir
+cd $WorkDir
+cp $CurDir/$1 $Assembly
+cp $CurDir/$2 $Reads
+
+
+# ---------------
+# Step 3
+# Align seq reads
+# ---------------
+# Prepare the assembly for alignment
+# Align reads against the assembly
+# Convert the SAM file to BAM in preparation for sorting.
+# Sort the BAM file, in preparation for SNP calling:
+# Index the bam file
+
+
+minimap2 -ax map-ont $Assembly $Reads > ${Assembly}_aligned.sam
+samtools view --threads 16 -bS ${Assembly}_aligned.sam -o ${Assembly}_aligned.bam
+samtools sort --threads 16 -o ${Assembly}_aligned_sorted.bam ${Assembly}_aligned.bam
+
+rm $Assembly
+rm $Reads
+rm ${Assembly}_aligned.sam
+mkdir -p $CurDir/$OutDir
+cp -r $WorkDir/* $CurDir/$OutDir/.
+```
+
+This program is run with the following code:
+
+```bash
+for Assembly in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa); do
+Reference=$(ls repeat_masked/*/589/filtered_contigs/*_contigs_unmasked.fa)
+Strain=$(echo $Assembly | rev | cut -f3 -d '/'| rev)
+Organism=$(echo $Reference | rev | cut -f3 -d '/' | rev)
+Reads=$(ls qc_dna/minion/*/$Strain/*_trim.fastq.gz)
+Prefix="${Organism}_${Strain}"
+OutDir=analysis/genome_alignment/minimap/$Organism/vs_${Strain}
+ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment
+qsub $ProgDir/minimap/sub_minimap2.sh $Reference $Reads $OutDir
+done
+```
+
+
+
 
 Investigate GC content in the genome:
 
@@ -1283,7 +1362,7 @@ cat $OutDir/telomere_hits.txt | sort -nr -k5 | less
 ```
 
 
-SNP calling codes.
+# SNP calling codes.
 
 The alignment by BWA has ben conducted already during the genome assembly. So we will start from the Pre SNP calling clean up step.
 
@@ -1440,85 +1519,7 @@ java -jar $ProgDir/GenomeAnalysisTK.jar \
 
 ```
 
-Coverage of Nanopore reads over Assembly.
 
-
-#For the alignment of ONT reads versus Nanopore assembly use the program minimap:
-
-```bash
-#!/bin/bash
-#$ -S /bin/bash
-#$ -cwd
-#$ -pe smp 16
-#$ -l virtual_free=1G
-#$ -l h=blacklace02.blacklace|blacklace03.blacklace|blacklace04.blacklace|blacklace05.blacklace|blacklace06.blacklace|blacklace07.blacklace|blacklace08.blacklace|blacklace09.blacklace|blacklace10.blacklace
-
-# Align raw reads to an assembly.
-
-# ---------------
-# Step 1
-# Collect inputs
-# ---------------
-
-Assembly=$(basename $1)
-Reads=$(basename $2)
-OutDir=$3
-
-
-CurDir=$PWD
-echo  "Running Bowtie with the following inputs:"
-echo "Assembly - $Assembly"
-echo "Reads - $Reads"
-echo "OutDir - $OutDir"
-
-# ---------------
-# Step 2
-# Copy data
-# ---------------
-
-WorkDir=$TMPDIR/minimap2
-mkdir -p $WorkDir
-cd $WorkDir
-cp $CurDir/$1 $Assembly
-cp $CurDir/$2 $Reads
-
-
-# ---------------
-# Step 3
-# Align seq reads
-# ---------------
-# Prepare the assembly for alignment
-# Align reads against the assembly
-# Convert the SAM file to BAM in preparation for sorting.
-# Sort the BAM file, in preparation for SNP calling:
-# Index the bam file
-
-
-minimap2 -ax map-ont $Assembly $Reads > ${Assembly}_aligned.sam
-samtools view --threads 16 -bS ${Assembly}_aligned.sam -o ${Assembly}_aligned.bam
-samtools sort --threads 16 -o ${Assembly}_aligned_sorted.bam ${Assembly}_aligned.bam
-
-rm $Assembly
-rm $Reads
-rm ${Assembly}_aligned.sam
-mkdir -p $CurDir/$OutDir
-cp -r $WorkDir/* $CurDir/$OutDir/.
-```
-
-This program is run with the following code:
-
-```bash
-for Assembly in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa); do
-Reference=$(ls repeat_masked/*/589/filtered_contigs/*_contigs_unmasked.fa)
-Strain=$(echo $Assembly | rev | cut -f3 -d '/'| rev)
-Organism=$(echo $Reference | rev | cut -f3 -d '/' | rev)
-Reads=$(ls qc_dna/minion/*/$Strain/*_trim.fastq.gz)
-Prefix="${Organism}_${Strain}"
-OutDir=analysis/genome_alignment/minimap/$Organism/vs_${Strain}
-ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/genome_alignment
-qsub $ProgDir/minimap/sub_minimap2.sh $Reference $Reads $OutDir
-done
-```
 
 #To visualise in IGV the bam files we need the index of that bam file. Minimap did not generate the index files of the alignments, so I will try to index them using samtools. 
 
