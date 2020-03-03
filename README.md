@@ -1,4 +1,4 @@
-# pichia
+# Pichia stipitis assembly and annotation.
 
 commands used in the assembly and annotation of Pichia genomes
 
@@ -1457,7 +1457,6 @@ cat $OutDir/telomere_hits.txt | sort -nr -k5 | less
 
 The alignment by BWA has ben conducted already during the genome assembly. So we will start from the Pre SNP calling clean up step.
 
-
 1. Pre SNP calling clean up
 
 1.1  Rename input mapping files in each folder by prefixing with the strain ID.
@@ -1478,7 +1477,6 @@ I will use the alignments of the Parental strain (589) versus the evolved strain
     cd $CurDir
   done
 ```
-
 1.2 Remove multimapping reads, discordant reads. PCR and optical duplicates, and add read group and sample name to each mapped read (preferably, the shortest ID possible)
 
 Convention used: qsub $ProgDir/sub_pre_snp_calling.sh <SAMPLE_ID>
@@ -1507,12 +1505,11 @@ java -jar $ProgDir/picard.jar CreateSequenceDictionary R=$Reference O=$OutName
 samtools faidx $Reference
 done
 ```
-################
+Copy index file to same folder as BAM alignments
 
-###Copy index file to same folder as BAM alignments
+Move to the directory where the output of SNP calling should be placed. Then Start SNP calling with GATK. The submission script required need to be custom-prepared for each analysis, depending on what samples are being analysed. See inside the submission script below (GATK codes):
 
-Move to the directory where the output of SNP calling should be placed. Then Start SNP calling with GATK. The submission script required need to be custom-prepared for each analysis, depending on what samples are being analysed. See inside the submission script below:
-
+In order to run GATK I have used the next two set of commands, both of them start the run, but the outputs are empty. Folders are created normally but there is nothing inside.
 
 ```bash
 Isolate=589
@@ -1525,11 +1522,6 @@ ProgDir=/home/vegasa/git_repos/scripts/pichia/popgen
 qsub $ProgDir/sub_SNP_calling_multithreaded2.sh $Reference $Isolate
 cd $CurDir
 ```
-
-
-home/groups/harrisonlab/project_files/Pichia/
-
-
 ```bash
 for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa); do
   Reference=$(ls repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_softmasked_repeatmasker_TPSI_appended.fa)
@@ -1541,9 +1533,8 @@ for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked_repeatm
   cd $CurDir
 done
 ```
-
-/home/armita/git_repos/emr_repos/scripts/phytophthora/Pcac_popgen/sub_SNP_calling_multithreaded2.sh
-
+The program for SNP calling is GATK:/home/armita/git_repos/emr_repos/scripts/phytophthora/Pcac_popgen/sub_SNP_calling_multithreaded2.sh
+The codes have been run with the program as:
 
 ```bash
 #$ -S /bin/bash
