@@ -1,17 +1,20 @@
 # pichia
+
 commands used in the assembly and annotation of Pichia genomes
 
-##Demultiplexing reads using Albacore. 
-Data was basecalled again using Albacore 2.3.3 on the minion server:
-
-#The program was run in: 
+The program was run in: 
 
 cd /home/groups/harrisonlab/project_files/Pichia 
 
-#The new folder after the change in the cluster:
+The new folder after the change in the cluster:
 /home/groups/harrisonlab/project_files/Pichia is now at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia
 
-#My folder is now: /projects/oldhome/vegasa 
+My folder is now: /projects/oldhome/vegasa 
+
+
+# Demultiplexing reads using Albacore.
+
+Data was basecalled again using Albacore 2.3.3 on the minion server:
 
 ```bash
 screen -a  
@@ -75,7 +78,7 @@ ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq |wc -l
   chmod +rw $OutDir/Pichia_albacore_v2.3.3_demultiplexed.tar.gz
 ```
 
-##Building of directory structure
+# Building of directory structure
 
 ```bash
 ProjDir=/home/groups/harrisonlab/project_files/Pichia
@@ -111,7 +114,7 @@ cd $ProjDir
 
 ```
 
-#Doing it in in this way was not possible since the message of no space left in the device appeared. So we will try another way: First running the OutDir variable and then running the tar command. So:
+Doing it in in this way was not possible since the message of no space left in the device appeared. So we will try another way: First running the OutDir variable and then running the tar command. So:
 
 ```bash
   OutDir=/data/scratch/nanopore_tmp_data/Alternaria/albacore_v2.1.10
@@ -122,9 +125,9 @@ cd $ProjDir
 
 ```
 
-#ASSEMBLY.
+# ASSEMBLY.
 
-#Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node. 
+1. Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node. 
 
 
 ```bash
@@ -138,7 +141,7 @@ for RawReads in $(ls raw_dna/minion/*/*/*.fastq.gz); do
   done
 ```
 
-#Identify sequencing coverage
+2. Identify sequencing coverage
 
 #For Minion data:
 
@@ -172,7 +175,7 @@ Coverage.
 ```
 
 
-#Read correction using Canu
+3. Read correction using Canu
 
 ```bash
 for TrimReads in $(ls qc_dna/minion/*/*/*q.gz); do
@@ -184,7 +187,7 @@ qsub $ProgDir/sub_canu_correction.sh $TrimReads 16m $Strain $OutDir
 done
 ```
 
-#Assembbly using SMARTdenovo
+4. Assembbly using SMARTdenovo
 
 ```bash
 for CorrectedReads in $(ls assembly/canu-1.8/*/*/*.trimmedReads.fasta.gz); do
@@ -197,7 +200,7 @@ qsub $ProgDir/sub_SMARTdenovo.sh $CorrectedReads $Prefix $OutDir
 done
 ```
 
-Quast and busco were run to assess the effects of racon on assembly quality:
+5. Quast and busco were run to assess the effects of racon on assembly quality:
 
 ```bash
 
@@ -222,7 +225,7 @@ qsub $ProgDir/sub_busco3.sh $Assembly $BuscoDB $OutDir
 done
 ```
 
-#Error correction using racon:
+6. Error correction using racon:
 
 ```bash
 for Assembly in $(ls assembly/SMARTdenovo/*/*/*.dmo.lay.utg); do
@@ -247,7 +250,7 @@ $ProgDir/remove_contaminants.py --keep_mitochondria --inp $Assembly --out $OutDi
 done
 ```
 
-#Quast and busco were run to assess the effects of racon on assembly quality:
+7. Quast and busco were run to assess the effects of racon on assembly quality:
 
 ```bash
 ProgDir=/home/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/quast
@@ -285,7 +288,7 @@ printf "$FileName\t$Complete\t$Duplicated\t$Fragmented\t$Missing\t$Total\n"
 done
 ```
 
-#Results.
+Busco Results.
 
 ```bash
 short_summary_589_smartdenovo.dmo.lay.txt       531     13      306     478    1                                                                                        315
@@ -315,7 +318,7 @@ short_summary_racon_min_500bp_renamed.txt       0       0       0       1315   1
 
 ```
 
-#This results do not seem correct since some files have the value "0" for complete genes, that means that there are 0 genes identified. I checked the files after the run in racon, and they were empty, so I re-run the command. After running it I should check if there is information in them with ls -lh. After repeating it, the files had information on them, and BUSCO was run again. The results obtained after the second run are:
+This results do not seem correct since some files have the value "0" for complete genes, that means that there are 0 genes identified. I checked the files after the run in racon, and they were empty, so I re-run the command. After running it I should check if there is information in them with ls -lh. After repeating it, the files had information on them, and BUSCO was run again. The results obtained after the second run are:
 
 ```bash
 short_summary_589_smartdenovo.dmo.lay.txt         531     13      306     478    1315
