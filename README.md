@@ -1240,7 +1240,7 @@ done
 
 2. Coverage of Nanopore reads over Assembly.
 
-For the alignment of ONT reads versus Nanopore assembly use the program minimap:
+For the alignment of ONT reads versus Nanopore assembly use the program minimap. The code of the program is the following:
 
 ```bash
 #!/bin/bash
@@ -1317,10 +1317,106 @@ qsub $ProgDir/minimap/sub_minimap2.sh $Reference $Reads $OutDir
 done
 ```
 
+# Indexing files from Minimap.
+
+To visualise in IGV the bam files we need the index of that bam file. Minimap did not generate the index files of the alignments, so I will try to index them using samtools. 
+
+```bash
+for File in $(ls analysis/genome_alignment/minimap/*/*/*_contigs_unmasked.fa_aligned_sorted.bam); do
+Strain=$(echo $File | rev | cut -f2 -d '/'| rev)
+File=analysis/genome_alignment/minimap/589/$Strain/*_contigs_unmasked.fa_aligned_sorted.bam
+samtools index <$File> -o $File 
+done
+```
+
+Once the alignment is done we have to plot the coverage, generating first the .tsv files:
+
+```bash
+for Sam in $(ls analysis/genome_alignment/minimap/*/vs_*/*_aligned_sorted.bam); do
+  Target=$(echo $Sam | rev | cut -f2 -d '/' | rev)
+  Strain=$(echo $Sam | rev | cut -f3 -d '/' | rev)
+  echo "$Strain-$Target"
+  OutDir=$(dirname $Sam)
+  samtools depth -aa $Sam > $OutDir/${Strain}_${Target}_depth.tsv
+done
+
+for Strain in 589 591 594; do
+  for Cov in $(ls analysis/genome_alignment/minimap/*/vs_*/*_depth.tsv); do
+    echo ${Cov} | cut -f4,5,6 -d '/' --output-delimiter " - "
+    cat $Cov | cut -f3 | sort -n | awk ' { a[i++]=$1; } END { print a[int(i/2)]; }'
+  done
+done > analysis/genome_alignment/minimap/read_coverage.txt
+```
+#Plot the coverage using R. Andy run this codes since the high coverage was observable in the contig 3 of 591: 
+
+```
+cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv  | grep 'contig_3' > tmp.tsv
+
+tmp <- read.delim("~/Downloads/tmp.tsv", header=FALSE)
+library(ggplot2)
+p <- ggplot(data=tmp, aes(x=tmp$V2, y=tmp$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
+outfile= paste("589", "vs_589", "contig3", "minion.jpg", sep = "_")
+ggsave(outfile , plot = p, width = 20, height = 5, units = 'in', limitsize = TRUE)
 
 
+cat analysis/genome_alignment/minimap/589/vs_591/589_vs_591_depth.tsv  | grep 'contig_3' > tmp2.tsv
+cat analysis/genome_alignment/minimap/589/vs_594/589_vs_594_depth.tsv  | grep 'contig_3' > tmp3.tsv
+```
+```
+tmp2 <- read.delim("~/Downloads/tmp2.tsv", header=FALSE)
+library(ggplot2)
+p2 <- ggplot(data=tmp, aes(x=tmp2$V2, y=tmp2$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
+outfile= paste("591", "vs_589", "contig3", "minion.jpg", sep = "_")
+ggsave(outfile , plot = p2, width = 20, height = 5, units = 'in', limitsize = TRUE)
+tmp3 <- read.delim("~/Downloads/tmp3.tsv", header=FALSE)
+library(ggplot2)
+p4 <- ggplot(data=tmp, aes(x=tmp3$V2, y=tmp3$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
+outfile= paste("594", "vs_589", "contig3", "minion.jpg", sep = "_")
+ggsave(outfile , plot = p4, width = 20, height = 5, units = 'in', limitsize = TRUE)
+```
 
-Investigate GC content in the genome:
+I will use the same to try to plot the whole genome. 
+
+```
+cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv > tmp_589.tsv
+cat analysis/genome_alignment/minimap/589/vs_591/589_vs_591_depth.tsv > tmp_591.tsv
+cat analysis/genome_alignment/minimap/589/vs_594/589_vs_594_depth.tsv > tmp_594.tsv
+
+tmp_589 <- read.delim("~/Alignments/Coverage_ONT/tmp_589.tsv", header=FALSE)
+tmp_591 <- read.delim("~/Alignments/Coverage_ONT/tmp_591.tsv", header=FALSE)
+tmp_594 <- read.delim("~/Alignments/Coverage_ONT/tmp_594.tsv", header=FALSE)
+
+library(ggplot2)
+
+p <- ggplot(data=tmp_589, aes(x=tmp_589$V2, y=tmp_589$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
+
+outfile= paste("589", "vs_589", "minion.jpg", sep = "_")
+ggsave(outfile , plot = p, width = 20, height = 5, units = 'in', limitsize = TRUE)
+```
+I obtained the result, but the circos plots look better. 
+
+
+# Extracting reads from the bam files. 
+
+In order to extract the reads from the bam files we will use the bam files. 
+
+Run at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis/genome_alignment/minimap/589/vs_591. The -h option was added, because when sorting a message error appeared saying that the header was missing. 
+
+```
+samtools view 589_contigs_unmasked.fa_aligned_sorted.bam "contig_3:1082100-1082200" -h > 591_cen5_region_200Bp.bam
+```
+Sorting of the bam file generated. 
+
+```
+samtools sort -n 591_cen5_region_200Bp.bam > 591_cen5_region_200bp_sorted.bam
+```
+Now that we have the reads in a bam file, we can extract the fastq reads using bedtools.
+
+```bash
+bedtools bamtofastq -i 591_cen5_region_200bp_sorted.bam -fq 591_cen5_region_200bp_sorted.bam.fq
+```
+
+# Investigate GC content in the genome:
 
 ```bash
  for Assembly in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa); do
@@ -1334,11 +1430,7 @@ Investigate GC content in the genome:
   done
 ```
 
-Investigate GC content per contig:
-
-
-
-Identify Telomere repeats:
+# Identify Telomere repeats
 
 Telomeric repeats were identified in assemblies:
 
@@ -1360,7 +1452,6 @@ $ProgDir/annotate_telomeres.py --fasta $Assembly --out $OutDir/telomere_hits
 done
 cat $OutDir/telomere_hits.txt | sort -nr -k5 | less
 ```
-
 
 # SNP calling codes.
 
@@ -1516,104 +1607,5 @@ java -jar $ProgDir/GenomeAnalysisTK.jar \
 
 # http://gatkforums.broadinstitute.org/gatk/discussion/1975/how-can-i-use-parallelism-to-make-gatk-tools-run-faster
 (END)
-
-```
-
-
-
-#To visualise in IGV the bam files we need the index of that bam file. Minimap did not generate the index files of the alignments, so I will try to index them using samtools. 
-
-```bash
-for File in $(ls analysis/genome_alignment/minimap/*/*/*_contigs_unmasked.fa_aligned_sorted.bam); do
-Strain=$(echo $File | rev | cut -f2 -d '/'| rev)
-File=analysis/genome_alignment/minimap/589/$Strain/*_contigs_unmasked.fa_aligned_sorted.bam
-samtools index <$File> -o $File 
-done
-```
-
-#Once the alignment is done we have to plot the coverage, generating first the .tsv files:
-
-
-```bash
-for Sam in $(ls analysis/genome_alignment/minimap/*/vs_*/*_aligned_sorted.bam); do
-  Target=$(echo $Sam | rev | cut -f2 -d '/' | rev)
-  Strain=$(echo $Sam | rev | cut -f3 -d '/' | rev)
-  echo "$Strain-$Target"
-  OutDir=$(dirname $Sam)
-  samtools depth -aa $Sam > $OutDir/${Strain}_${Target}_depth.tsv
-done
-
-for Strain in 589 591 594; do
-  for Cov in $(ls analysis/genome_alignment/minimap/*/vs_*/*_depth.tsv); do
-    echo ${Cov} | cut -f4,5,6 -d '/' --output-delimiter " - "
-    cat $Cov | cut -f3 | sort -n | awk ' { a[i++]=$1; } END { print a[int(i/2)]; }'
-  done
-done > analysis/genome_alignment/minimap/read_coverage.txt
-```
-#Plot the coverage using R. 
-
-```
-#Andy run this codes since the high coverage was observable in the contig 3 of 591: 
-
-cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv  | grep 'contig_3' > tmp.tsv
-
-tmp <- read.delim("~/Downloads/tmp.tsv", header=FALSE)
-library(ggplot2)
-p <- ggplot(data=tmp, aes(x=tmp$V2, y=tmp$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
-outfile= paste("589", "vs_589", "contig3", "minion.jpg", sep = "_")
-ggsave(outfile , plot = p, width = 20, height = 5, units = 'in', limitsize = TRUE)
-
-
-cat analysis/genome_alignment/minimap/589/vs_591/589_vs_591_depth.tsv  | grep 'contig_3' > tmp2.tsv
-cat analysis/genome_alignment/minimap/589/vs_594/589_vs_594_depth.tsv  | grep 'contig_3' > tmp3.tsv
-
-
-tmp2 <- read.delim("~/Downloads/tmp2.tsv", header=FALSE)
-library(ggplot2)
-p2 <- ggplot(data=tmp, aes(x=tmp2$V2, y=tmp2$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
-outfile= paste("591", "vs_589", "contig3", "minion.jpg", sep = "_")
-ggsave(outfile , plot = p2, width = 20, height = 5, units = 'in', limitsize = TRUE)
-tmp3 <- read.delim("~/Downloads/tmp3.tsv", header=FALSE)
-library(ggplot2)
-p4 <- ggplot(data=tmp, aes(x=tmp3$V2, y=tmp3$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
-outfile= paste("594", "vs_589", "contig3", "minion.jpg", sep = "_")
-ggsave(outfile , plot = p4, width = 20, height = 5, units = 'in', limitsize = TRUE)
-
-
-#I will use the same to try to plot the whole genome. 
-
-cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv > tmp_589.tsv
-cat analysis/genome_alignment/minimap/589/vs_591/589_vs_591_depth.tsv > tmp_591.tsv
-cat analysis/genome_alignment/minimap/589/vs_594/589_vs_594_depth.tsv > tmp_594.tsv
-
-tmp_589 <- read.delim("~/Alignments/Coverage_ONT/tmp_589.tsv", header=FALSE)
-tmp_591 <- read.delim("~/Alignments/Coverage_ONT/tmp_591.tsv", header=FALSE)
-tmp_594 <- read.delim("~/Alignments/Coverage_ONT/tmp_594.tsv", header=FALSE)
-
-library(ggplot2)
-
-p <- ggplot(data=tmp_589, aes(x=tmp_589$V2, y=tmp_589$V3)) + geom_line() + labs(x = "Position (bp)", y = "Coverage") + geom_vline(xintercept = 1071000, colour = 'red', linetype = "dashed") + geom_vline(xintercept = 1153000, colour = 'red', linetype = "dashed")
-
-outfile= paste("589", "vs_589", "minion.jpg", sep = "_")
-ggsave(outfile , plot = p, width = 20, height = 5, units = 'in', limitsize = TRUE)
-
-```
-
-
-#In order to extract the reads from the bam files we will use the bam files. 
-
-```bash
-
-#Run at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis/genome_alignment/minimap/589/vs_591. The -h option was added, because when sorting a message error appeared saying that the header was missing. 
-
-samtools view 589_contigs_unmasked.fa_aligned_sorted.bam "contig_3:1082100-1082200" -h > 591_cen5_region_200Bp.bam
-
-#Sorting of the bam file generated. 
-
-samtools sort -n 591_cen5_region_200Bp.bam > 591_cen5_region_200bp_sorted.bam
-
-#Now that we have the reads in a bam file, we can extract the fastq reads using bedtools.
-
-bedtools bamtofastq -i 591_cen5_region_200bp_sorted.bam -fq 591_cen5_region_200bp_sorted.bam.fq
 
 ```
