@@ -2,14 +2,14 @@
 
 commands used in the assembly and annotation of Pichia genomes
 
-The program was run in: 
+The program was run in:
 
-cd /home/groups/harrisonlab/project_files/Pichia 
+cd /home/groups/harrisonlab/project_files/Pichia
 
 The new folder after the change in the cluster:
 /home/groups/harrisonlab/project_files/Pichia is now at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia
 
-My folder is now: /projects/oldhome/vegasa 
+My folder is now: /projects/oldhome/vegasa
 
 
 # Demultiplexing reads using Albacore.
@@ -19,7 +19,7 @@ Data was basecalled again using Albacore 2.3.3 on the minion server:
 ```bash
 screen -a  
 
-#Sceen -a opens a new session. 
+#Sceen -a opens a new session.
 
 ssh nanopore@nanopore
 
@@ -50,7 +50,7 @@ cd ~/Pichia_31_01_2019/$Date
   --reads_per_fastq_batch 4000 \
   --barcoding
 
-#Run the commmand ls to check that the folders actually exist. 
+#Run the commmand ls to check that the folders actually exist.
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq |wc -l
 
@@ -58,13 +58,13 @@ ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq |wc -l
 
 ls Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq |wc -l
 
-#Run each cat command individually and check that the output exists. 
+#Run each cat command individually and check that the output exists.
 
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode01/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode01.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode02/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode02.fastq.gz
   cat Pichia_albacore_v2.3.3_demultiplexed/workspace/pass/barcode03/*.fastq | gzip -cf > Pichia_albacore_v2.3.3_barcode03.fastq.gz
 
-#Set the space where the output data will be. 
+#Set the space where the output data will be.
 
   OutDir=/data/scratch/nanopore_tmp_data/Pichia/albacore_v2.3.3
   mkdir -p $OutDir
@@ -127,7 +127,7 @@ Doing it in in this way was not possible since the message of no space left in t
 
 # ASSEMBLY.
 
-1. Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node. 
+1. Removal of the adapters: Splitting reads and trimming adapters using porechop. We only need the FASTA files for this step, so we can do it while the "tar" command is runing. To do so, we have to create the directory in our project folder and not the nanopore node.
 
 
 ```bash
@@ -167,7 +167,7 @@ done
 ```
 
 ```
-Coverage. 
+Coverage.
 
 589     186.88
 591     145.17
@@ -873,7 +873,7 @@ To do yet:
 
 The folder polished is not present, so I have to create it before going on with the Merging of both assemblies.
 
-NOTE: HYBRID ASSEMBBLY was stopped at this point. The rest is yet to do in case we are interested in the future. 
+NOTE: HYBRID ASSEMBBLY was stopped at this point. The rest is yet to do in case we are interested in the future.
 
 # Re-run BUSCO
 
@@ -1006,7 +1006,7 @@ qsub $ProgDir/sub_quast.sh $Assembly $OutDir
 done
 ```
 
-# Repeat Masking. 
+# Repeat Masking.
 
 Repeat masking was done for the Nanopore assembly polished with Illumina data (SMARTdenovo).
 
@@ -1319,13 +1319,13 @@ done
 
 # Indexing files from Minimap.
 
-To visualise in IGV the bam files we need the index of that bam file. Minimap did not generate the index files of the alignments, so I will try to index them using samtools. 
+To visualise in IGV the bam files we need the index of that bam file. Minimap did not generate the index files of the alignments, so I will try to index them using samtools.
 
 ```bash
 for File in $(ls analysis/genome_alignment/minimap/*/*/*_contigs_unmasked.fa_aligned_sorted.bam); do
 Strain=$(echo $File | rev | cut -f2 -d '/'| rev)
 File=analysis/genome_alignment/minimap/589/$Strain/*_contigs_unmasked.fa_aligned_sorted.bam
-samtools index <$File> -o $File 
+samtools index <$File> -o $File
 done
 ```
 
@@ -1347,7 +1347,7 @@ for Strain in 589 591 594; do
   done
 done > analysis/genome_alignment/minimap/read_coverage.txt
 ```
-#Plot the coverage using R. Andy run this codes since the high coverage was observable in the contig 3 of 591: 
+#Plot the coverage using R. Andy run this codes since the high coverage was observable in the contig 3 of 591:
 
 ```
 cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv  | grep 'contig_3' > tmp.tsv
@@ -1375,7 +1375,7 @@ outfile= paste("594", "vs_589", "contig3", "minion.jpg", sep = "_")
 ggsave(outfile , plot = p4, width = 20, height = 5, units = 'in', limitsize = TRUE)
 ```
 
-I will use the same to try to plot the whole genome. 
+I will use the same to try to plot the whole genome.
 
 ```
 cat analysis/genome_alignment/minimap/589/vs_589/589_vs_589_depth.tsv > tmp_589.tsv
@@ -1393,19 +1393,19 @@ p <- ggplot(data=tmp_589, aes(x=tmp_589$V2, y=tmp_589$V3)) + geom_line() + labs(
 outfile= paste("589", "vs_589", "minion.jpg", sep = "_")
 ggsave(outfile , plot = p, width = 20, height = 5, units = 'in', limitsize = TRUE)
 ```
-I obtained the result, but the circos plots look better. 
+I obtained the result, but the circos plots look better.
 
 
-# Extracting reads from the bam files. 
+# Extracting reads from the bam files.
 
-In order to extract the reads from the bam files we will use the bam files. 
+In order to extract the reads from the bam files we will use the bam files.
 
-Run at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis/genome_alignment/minimap/589/vs_591. The -h option was added, because when sorting a message error appeared saying that the header was missing. 
+Run at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis/genome_alignment/minimap/589/vs_591. The -h option was added, because when sorting a message error appeared saying that the header was missing.
 
 ```
 samtools view 589_contigs_unmasked.fa_aligned_sorted.bam "contig_3:1082100-1082200" -h > 591_cen5_region_200Bp.bam
 ```
-Sorting of the bam file generated. 
+Sorting of the bam file generated.
 
 ```
 samtools sort -n 591_cen5_region_200Bp.bam > 591_cen5_region_200bp_sorted.bam
@@ -1452,7 +1452,7 @@ $ProgDir/annotate_telomeres.py --fasta $Assembly --out $OutDir/telomere_hits
 done
 cat $OutDir/telomere_hits.txt | sort -nr -k5 | less
 ```
-
+<!--
 # SNP calling codes.
 
 The alignment by BWA has ben conducted already during the genome assembly. So we will start from the Pre SNP calling clean up step.
@@ -1493,7 +1493,7 @@ done
 
 2. Run SNP calling
 
-Prepare genome reference indexes required by GATK. Prepare for 589, 591 and 594. 
+Prepare genome reference indexes required by GATK. Prepare for 589, 591 and 594.
 
 ```bash
 for Reference in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa); do
@@ -1526,7 +1526,7 @@ cd $CurDir
 for File in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa); do
   Reference=$(ls repeat_masked/P.stipitis/589/filtered_contigs/589_contigs_softmasked_repeatmasker_TPSI_appended.fa)
   Isolate=$(echo $File | rev | cut -f3 -d '/' | rev)
-  CurDir=/home/groups/harrisonlab/project_files/Pichia 
+  CurDir=/home/groups/harrisonlab/project_files/Pichia
   OutDir=analysis/popgen/SNP_calling
   ProgDir=/home/vegasa/git_repos/scripts/pichia/popgen
   qsub $ProgDir/sub_SNP_calling_multithreaded2.sh $Reference $Isolate
@@ -1599,4 +1599,76 @@ java -jar $ProgDir/GenomeAnalysisTK.jar \
 # http://gatkforums.broadinstitute.org/gatk/discussion/1975/how-can-i-use-parallelism-to-make-gatk-tools-run-faster
 (END)
 
+``` -->
+
+
+
+# Gene prediction
+
+Gne prediction was performed using fungap on the NRI cluster.
+
+## Data download:
+
+
+RNAseq reads were downloaded for the reference genome
+
+```bash
+conda create -n sra-tools
+conda activate sra-tools
+conda install -c bioconda sra-tools
+```
+
+```bash
+ProjDir=
+cd $ProjDir
+OutDir=raw_rna/paired/P.stipitis/Y-7124
+mkdir -p $OutDir
+fastq-dump --split-files --gzip --outdir $OutDir SRR8420582
+```
+
+
+## Functional annotation
+A) Interproscan
+
+Interproscan was used to give gene models functional annotations. Annotation was run using the commands below:
+
+Note: This is a long-running script. As such, these commands were run using 'screen' to allow jobs to be submitted and monitored in the background. This allows the session to be disconnected and reconnected over time.
+
+Screen ouptut detailing the progress of submission of interporscan jobs was redirected to a temporary output file named interproscan_submission.log .
+
+From the new cluster:
+```bash
+# screen -a
+# cd /projects/oldhome/groups/harrisonlab/project_files/Pichia
+#
+# SplitfileDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/signal_peptides
+# ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/signal_peptides
+# CurPath=$PWD
+# for Proteome in $(ls gene_pred/fungap/P.stipitis/589/fungap_out/fungap_out_prot.faa); do
+# Strain=$(echo $Proteome | rev | cut -f3 -d '/' | rev)
+# Organism=$(echo $Proteome | rev | cut -f4 -d '/' | rev)
+# SplitDir=gene_pred/fungap_split/$Organism/$Strain
+# mkdir -p $SplitDir
+# BaseName="$Organism""_$Strain"_fungap
+# $SplitfileDir/splitfile_500.py --inp_fasta $Proteome --out_dir $SplitDir --out_base $BaseName
+# done
+#
+# for Fasta in $(ls gene_pred/fungap/P.stipitis/589/fungap_out/fungap_out_prot.faa); do
+# 	Jobs=$(squeue -n squeue -n slurm_interproscan.sh -t pd,s,cf,ca,f,to,pr,bf,nf,se | wc -l)
+# 	while [ $Jobs -gt 3 ]; do
+# 	sleep 10
+# 	printf "."
+# 	Jobs=$(squeue -n squeue -n slurm_interproscan.sh -t pd,s,cf,ca,f,to,pr,bf,nf,se | wc -l)
+# 	done
+# 	printf "\n"
+# 	echo $File
+# 	OutDir=$(dirname $Fasta)/raw
+# 	ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/interproscan
+# 	sbatch $ProgDir/slurm_interproscan.sh $Fasta $OutDir
+# done
+
+Fasta=$(ls gene_pred/fungap/P.stipitis/589/fungap_out/fungap_out_prot.faa)
+OutDir=$(dirname $Fasta | sed 's/fungap/interproscan/g')
+ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/interproscan
+sbatch $ProgDir/slurm_interproscan.sh $Fasta $OutDir
 ```
