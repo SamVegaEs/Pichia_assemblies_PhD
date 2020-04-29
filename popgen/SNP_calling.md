@@ -38,7 +38,7 @@ Alignment of the evolved strains were made against the parental strain.
 
 
 ```bash
-  for File in $(ls analysis_aa/genome_alignment/bwa/P.stipitis/*/vs_CBS6054/*sorted.bam); do
+  for File in $(ls analysis_aa/genome_alignment/bwa/P.stipitis/*/vs_CBS6054/*_mergebamalignment.bam); do
     Strain=$(echo $File | rev | cut -f3 -d '/' | rev)
     Organism=$(echo $File | rev | cut -f4 -d '/' | rev)
     Prefix="vs_CBS6054"
@@ -82,16 +82,20 @@ samtools faidx $Reference
 done
 ```
 
+
+## SNP calling of 589 vs the reference genome
+
 ```bash
 Isolate="CBS6054"
 Reference=$(ls assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_genomic.fna)
 CurDir=$PWD
-OutDir=analysis_aa/popgen/SNP_calling
+OutDir=analysis_aa/popgen/SNP_calling/589_vs_CBS6054
 mkdir -p $OutDir
 cd $OutDir
 conda activate gatk4
 ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/pichia/popgen
-sbatch $ProgDir/slurm_snp_calling_ncbi.sh $Reference $Isolate
+# sbatch $ProgDir/slurm_snp_calling_ncbi.sh $Reference $Isolate
+sbatch $ProgDir/slurm_SNP_calling_589_vs_ref.sh $Reference $Isolate
 cd $CurDir
 ```
 
@@ -144,13 +148,13 @@ ggsave("~/Downloads/vs_589_gq.pdf", p2)
 
 
 
-## Filter SNPs based on this region being present in all isolates
+### 589 vs ref Filter SNPs
 
 Only retain biallelic high-quality SNPS with no missing data (for any individual) for genetic analyses below (in some cases, may allow some missing data in order to retain more SNPs, or first remove poorly sequenced individuals with too much missing data and then filter the SNPs).
 
 ```bash
 srun --partition=long --pty bash
-Vcf=$(ls analysis_aa/popgen/SNP_calling/vs_Y-11545/pichia.AssembledScaffolds_temp.vcf)
+Vcf=$(ls analysis_aa/popgen/SNP_calling/589_vs_CBS6054/vs_CBS6054/GCF_000209165.1_ASM20916v1_genomic_temp.vcf)
 vcftools=/projects/oldhome/sobczm/bin/vcftools/bin
 vcflib=/projects/oldhome/sobczm/bin/vcflib/bin
 mq=40
@@ -167,15 +171,25 @@ echo "count qfilter"
 cat ${Vcf%.vcf}_qfiltered.vcf | grep -v '#' | wc -l
 $vcftools/vcftools --vcf ${Vcf%.vcf}_qfiltered.vcf --max-missing $na --remove-indels --recode --out ${Vcf%.vcf}_qfiltered_presence
 
+
+$vcftools/vcftools --vcf ${Vcf%.vcf}_qfiltered.vcf --max-missing $na --keep-only-indels --recode --out ${Vcf%.vcf}_indels_qfiltered_presence
 ```
 
 ```
-After filtering, kept 3 out of 3 Individuals
+count prefilter
+55942
+55172
+After filtering, kept 1 out of 1 Individuals
 Outputting VCF file...
-After filtering, kept 4002 out of a possible 4565 Sites
-Run Time = 0.00 seconds
-```
+After filtering, kept 50380 out of a possible 55172 Sites
+Run Time = 2.00 seconds
 
+After filtering, kept 1 out of 1 Individuals
+Outputting VCF file...
+After filtering, kept 4409 out of a possible 55172 Sites
+Run Time = 1.00 seconds
+```
+<!--
 ## Gene models Y-11545
 ```bash
 cd assembly/misc_publications/P.stipitis/Y-11545_v2
@@ -209,6 +223,7 @@ wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/209/165/GCF_000209165.1_AS
 wget https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/209/165/GCF_000209165.1_ASM20916v1/GCF_000209165.1_ASM20916v1_translated_cds.faa.gz
 gunzip *.gz
 ```
+-->
 
 
 # Collect VCF stats
@@ -216,32 +231,35 @@ gunzip *.gz
 General VCF stats (remember that vcftools needs to have the PERL library exported)
 
 ```bash
-  Isolate="Y-11545"
+  Isolate="CBS6054"
   VcfTools=/projects/oldhome/sobczm/bin/vcftools/bin
   export PERL5LIB="$VcfTools:$PERL5LIB"
-  VcfFiltered=$(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.vcf)
+  VcfFiltered=$(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.vcf | grep -v 'indels')
   Stats=$(echo $VcfFiltered | sed 's/.vcf/.stat/g')
+  perl $VcfTools/vcf-stats $VcfFiltered > $Stats
+  VcfFiltered=$(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.vcf | grep 'indels')
+  Stats=$(echo $VcfFiltered | sed 's/.vcf/_indels.stat/g')
   perl $VcfTools/vcf-stats $VcfFiltered > $Stats
 ```
 Calculate the index for percentage of shared SNP alleles between the individuals.
 
 ```bash
-  Isolate="Y-11545"
-  for Vcf in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.vcf); do
+  Isolate="CBS6054"
+  for Vcf in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.vcf | grep -v 'indels'); do
       ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/popgen/snp
       $ProgDir/similarity_percentage.py $Vcf
   done
 ```
 
-Visualise the output as heatmap and clustering dendrogram
+<!-- Visualise the output as heatmap and clustering dendrogram
 ```bash
-Isolate="Y-11545"
-for Log in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*distance.log); do
+Isolate="CBS6054"
+for Log in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*distance.log); do
   ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/popgen/snp
   Rscript --vanilla $ProgDir/distance_matrix.R $Log
   mv Rplots.pdf analysis_aa/popgen/SNP_calling/vs_${Isolate}/.
 done
-```
+``` -->
 
 Identify SNPs in gene models:
 
@@ -270,18 +288,20 @@ R36_14v1.0.genome: R36_14
 # SCRP371 genome
 SCRP371v1.0.genome: SCRP371
 # P. stipis
+Ps589v1.0.genome: 589
 PsY-11545v1.0.genome: Y-11545
+PsCBS6054v1.0.genome: CBS6054
 ```
 
 Collect input files
 
 ```bash
 Organism="P.stipitis"
-Strain="Y-11545"
-DbName="PsY-11545v1.0"
+Strain="CBS6054"
+DbName="PsCBS6054v1.0"
 ProjDir=$PWD
-Reference=$(ls $ProjDir/assembly/misc_publications/P.stipitis/Y-11545_v2/pichia.AssembledScaffolds.fasta)
-Gtf=$(ls $ProjDir/assembly/misc_publications/P.stipitis/Y-11545_v2/Pstipitisv2.FrozenGeneCatalog20080115.gff)
+Reference=$(ls $ProjDir/assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_genomic.fna)
+Gtf=$(ls $ProjDir/assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_genomic.gtf)
 SnpEff=/projects/oldhome/sobczm/bin/snpEff
 mkdir $SnpEff/data/${DbName}
 cp $Reference $SnpEff/data/${DbName}/sequences.fa
@@ -295,15 +315,15 @@ java -jar $SnpEff/snpEff.jar build -gtf22 -v ${DbName}
 Annotate VCF files
 ```bash
 Organism="P.stipitis"
-Strain="589"
-DbName="Ps589v1.0"
+Isolate="CBS6054"
+DbName="PsCBS6054v1.0"
 CurDir=/projects/oldhome/groups/harrisonlab/project_files/Pichia
 cd $CurDir
-  for Vcf in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.vcf); do
+  for Vcf in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence.recode.vcf | grep -v 'indels'); do
     echo $Vcf
     filename=$(basename "$Vcf")
     Prefix=${filename%.vcf}
-    OutDir=$(ls -d analysis_aa/popgen/SNP_calling)
+    OutDir=$(dirname $Vcf)
     SnpEff=/projects/oldhome/sobczm/bin/snpEff
     java -Xmx4g -jar $SnpEff/snpEff.jar -v -ud 0 ${DbName} $Vcf > $OutDir/"$Prefix"_annotated.vcf
     mv snpEff_genes.txt $OutDir/snpEff_genes_"$Prefix".txt
@@ -313,11 +333,11 @@ cd $CurDir
     #Create subsamples of SNPs containing those in a given category
     #-
     #genic (includes 5', 3' UTRs)
-    java -jar $SnpEff/SnpSift.jar filter "(ANN[*].EFFECT has 'missense_variant') || (ANN[*].EFFECT has 'nonsense_variant') || (ANN[*].EFFECT has 'synonymous_variant') || (ANN[*].EFFECT has 'intron_variant') || (ANN[*].EFFECT has '5_prime_UTR_variant') || (ANN[*].EFFECT has '3_prime_UTR_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_gene.vcf
+    java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'missense_variant') || (ANN[0].EFFECT has 'nonsense_variant') || (ANN[0].EFFECT has 'frameshift_variant') || (ANN[0].EFFECT has 'disruptive_inframe_insertion') || (ANN[0].EFFECT has 'disruptive_inframe_deletion') || (ANN[0].EFFECT has 'exon_loss_variant') || (ANN[0].EFFECT has 'splice_donor_variant') || (ANN[0].EFFECT has 'splice_acceptor_variant') || (ANN[0].EFFECT has 'synonymous_variant') || (ANN[0].EFFECT has 'intron_variant') || (ANN[*].EFFECT has 'splice_region_variant') || (ANN[*].EFFECT has '5_prime_UTR_variant') || (ANN[*].EFFECT has '3_prime_UTR_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_gene.vcf
     #coding
-    java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'missense_variant') || (ANN[0].EFFECT has 'nonsense_variant') || (ANN[0].EFFECT has 'synonymous_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_coding.vcf
+    java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'missense_variant') || (ANN[0].EFFECT has 'nonsense_variant') || (ANN[0].EFFECT has 'frameshift_variant') || (ANN[0].EFFECT has 'disruptive_inframe_insertion') || (ANN[0].EFFECT has 'disruptive_inframe_deletion') || (ANN[0].EFFECT has 'exon_loss_variant') || (ANN[0].EFFECT has 'splice_donor_variant') || (ANN[0].EFFECT has 'splice_acceptor_variant') || (ANN[0].EFFECT has 'synonymous_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_coding.vcf
     #non-synonymous
-    java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'missense_variant') || (ANN[0].EFFECT has 'nonsense_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_nonsyn.vcf
+    java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'missense_variant') || (ANN[0].EFFECT has 'nonsense_variant') || (ANN[0].EFFECT has 'frameshift_variant') || (ANN[0].EFFECT has 'disruptive_inframe_insertion') || (ANN[0].EFFECT has 'disruptive_inframe_deletion') || (ANN[0].EFFECT has 'disruptive_inframe_insertion') || (ANN[0].EFFECT has 'exon_loss_variant') || (ANN[0].EFFECT has 'splice_donor_variant') || (ANN[0].EFFECT has 'splice_acceptor_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_nonsyn.vcf
     #synonymous
     java -jar $SnpEff/SnpSift.jar filter "(ANN[0].EFFECT has 'synonymous_variant')" $OutDir/"$Prefix"_annotated.vcf > $OutDir/"$Prefix"_syn.vcf
     #Four-fold degenrate sites (output file suffix: 4fd)
@@ -328,11 +348,31 @@ cd $CurDir
     CdsSnps=$(cat $OutDir/"$Prefix"_coding.vcf | grep -v '#' | wc -l)
     NonsynSnps=$(cat $OutDir/"$Prefix"_nonsyn.vcf | grep -v '#' | wc -l)
     SynSnps=$(cat $OutDir/"$Prefix"_syn.vcf | grep -v '#' | wc -l)
-    printf "$AllSnps\t$GeneSnps\t$CdsSnps\t$NonsynSnps\t$SynSnps\n"
+    printf "$filename\t$AllSnps\t$GeneSnps\t$CdsSnps\t$NonsynSnps\t$SynSnps\n"
 done
 ```
 All Gene CDS nonsyn syn
-27	9	9	7	2
+GCF_000209165.1_ASM20916v1_genomic_temp_qfiltered_presence.recode.vcf	50380	24666	21907	5635	16272
+GCF_000209165.1_ASM20916v1_genomic_temp_indels_qfiltered_presence.recode.vcf	4409	671	346	346	0
+
+Perform interproscan annotation of the reference protein sequences.
+
+```bash
+Fasta=$(ls assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_protein.faa)
+OutDir=$(dirname $Fasta | sed 's&assembly/misc_publications&gene_pred/interproscan&g')
+ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/interproscan
+sbatch $ProgDir/slurm_interproscan.sh $Fasta $OutDir
+```
+
+```bash
+Annotations=$(ls assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_feature_table.txt)
+cat gene_pred/interproscan/P.stipitis/589/interproscan_out/fungap_out_prot.faa.tsv | grep -e 'gene_02300' -e 'gene_03751' -e 'gene_04075' > analysis_aa/popgen/SNP_calling/591_vs_589/vs_589/591_vs_589_ipr_annotations.tsv
+```
+
+```bash
+ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/pichia/popgen
+$ProgDir/extract_ref_annotations.py --genes_gff assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_genomic.gff --refseq assembly/misc_publications/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_feature_table.txt --snp_vcf analysis_aa/popgen/SNP_calling/589_vs_CBS6054/vs_CBS6054/GCF_000209165.1_ASM20916v1_genomic_temp_qfiltered_presence.recode_nonsyn.vcf --InterPro gene_pred/interproscan/P.stipitis/CBS6054/GCF_000209165.1_ASM20916v1_protein.faa.tsv > analysis_aa/popgen/SNP_calling/589_vs_CBS6054/vs_CBS6054/CBS6054_annotation_table.tsv
+```
 
 
 # 2. Vs 589
@@ -367,7 +407,7 @@ done
 Alignment of the evolved strains were made against the parental strain.
 
 ```bash
-  for File in $(ls analysis/genome_alignment/bwa/P.stipitis/*/vs_589_unmasked/*sorted.bam); do
+  for File in $(ls analysis_aa/genome_alignment/bwa/P.stipitis/*/vs_589/*_mergebamalignment.bam); do
     Strain=$(echo $File | rev | cut -f3 -d '/' | rev)
     Organism=$(echo $File | rev | cut -f4 -d '/' | rev)
     Prefix=$(echo $File | rev | cut -f2 -d '/' | rev)
@@ -387,7 +427,7 @@ Convention used: qsub $ProgDir/sub_pre_snp_calling.sh <SAMPLE_ID>
 ```bash
 conda activate gatk4
 Reference=$(ls repeat_masked/*/589/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa)
-for Sam in $(ls analysis_aa/popgen/*/*/*unmasked_sorted.bam); do
+for Sam in $(ls analysis_aa/popgen/*/*/*_vs_589_sorted.bam); do
 Strain=$(echo $Sam | rev | cut -f2 -d '/' | rev)
 Organism=$(echo $Sam | rev | cut -f3 -d '/' | rev)
 echo "$Organism - $Strain"
@@ -398,18 +438,20 @@ done
 ```
 
 
-# 2. Run SNP calling
+# 2. Run SNP calling of 591 vs 589
 
 Prepare genome reference indexes required by GATK. Prepare for 589, 591 and 594.
 
 ```bash
-for Reference in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa); do
-OutName=$(echo $Reference | sed 's/.fa/.dict/g')
-OutDir=$(dirname $Reference)
-mkdir -p $OutDir
+for Reference in $(ls repeat_masked/*/*/filtered_contigs/*_contigs_unmasked.fa | grep '589'); do
+  OutDir=analysis_aa/popgen/SNP_calling
+  mkdir -p $OutDir
+  Prefix=$(basename $Reference)
+  cp $Reference $OutDir/$Prefix
+  OutName=$(echo $Prefix | sed 's/.fa/.dict/g')
 ProgDir=/projects/oldhome/sobczm/bin/picard-tools-2.5.0
-java -jar $ProgDir/picard.jar CreateSequenceDictionary R=$Reference O=$OutName
-samtools faidx $Reference
+java -jar $ProgDir/picard.jar CreateSequenceDictionary R=$OutDir/$Prefix O=$OutDir/$OutName
+samtools faidx $OutDir/$Prefix
 done
 ```
 Copy index file to same folder as BAM alignments
@@ -420,14 +462,14 @@ In order to run GATK I have used the next two set of commands, both of them star
 
 ```bash
 Isolate="589"
-Reference=$(ls repeat_masked/*/589/filtered_contigs/*_contigs_softmasked_repeatmasker_TPSI_appended.fa)
+Reference=$(ls analysis_aa/popgen/SNP_calling/589_contigs_unmasked.fa)
 CurDir=$PWD
-OutDir=analysis_aa/popgen/SNP_calling
+OutDir=analysis_aa/popgen/SNP_calling/591_vs_589
 mkdir -p $OutDir
 cd $OutDir
 conda activate gatk4
 ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/pichia/popgen
-sbatch $ProgDir/slurm_snp_calling.sh $Reference $Isolate
+sbatch $ProgDir/slurm_SNP_calling_591_vs_589.sh $Reference $Isolate
 cd $CurDir
 ```
 
@@ -485,7 +527,7 @@ Only retain biallelic high-quality SNPS with no missing data (for any individual
 
 ```bash
 srun --partition=long --pty bash
-Vcf=$(ls analysis_aa/popgen/SNP_calling/vs_589/589_contigs_softmasked_repeatmasker_TPSI_appended_temp.vcf)
+Vcf=$(ls analysis_aa/popgen/SNP_calling/591_vs_589/vs_589/589_contigs_unmasked_temp.vcf)
 vcftools=/projects/oldhome/sobczm/bin/vcftools/bin
 vcflib=/projects/oldhome/sobczm/bin/vcflib/bin
 mq=40
@@ -501,21 +543,14 @@ $vcflib/vcffilter -f "QUAL > $qual & MQ > $mq" $Vcf \
 echo "count qfilter"
 cat ${Vcf%.vcf}_qfiltered.vcf | grep -v '#' | wc -l
 $vcftools/vcftools --vcf ${Vcf%.vcf}_qfiltered.vcf --max-missing $na --remove-indels --recode --out ${Vcf%.vcf}_qfiltered_presence
-
-# ProgDir=/home/armita/git_repos/emr_repos/scripts/popgen/snp
-# qsub $ProgDir/sub_vcf_parser.sh $Vcf 40 30 10 30 1 Y
 ```
 
-```bash
-# mv 62471_contigs_softmasked_repeatmasker_TPSI_appended_filtered.vcf analysis/popgen/SNP_calling/vs_62471/62471_contigs_softmasked_repeatmasker_TPSI_appended_filtered.vcf
-mv R36_14_contigs_softmasked_repeatmasker_TPSI_appended_filtered.vcf analysis/popgen/SNP_calling/vs_R36_14/R36_14_contigs_softmasked_repeatmasker_TPSI_appended_filtered.vcf
-```
 
 ```
-After filtering, kept 20 out of 20 Individuals
+After filtering, kept 2 out of 2 Individuals
 Outputting VCF file...
-After filtering, kept 65666 out of a possible 143123 Sites
-Run Time = 9.00 seconds
+After filtering, kept 14 out of a possible 40 Sites
+Run Time = 0.00 seconds
 ```
 
 ## Gene models 589
@@ -540,7 +575,7 @@ General VCF stats (remember that vcftools needs to have the PERL library exporte
   Isolate="589"
   VcfTools=/projects/oldhome/sobczm/bin/vcftools/bin
   export PERL5LIB="$VcfTools:$PERL5LIB"
-  VcfFiltered=$(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.vcf)
+  VcfFiltered=$(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.vcf)
   Stats=$(echo $VcfFiltered | sed 's/.vcf/.stat/g')
   perl $VcfTools/vcf-stats $VcfFiltered > $Stats
 ```
@@ -548,21 +583,21 @@ Calculate the index for percentage of shared SNP alleles between the individuals
 
 ```bash
   Isolate="589"
-  for Vcf in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.vcf); do
+  for Vcf in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.vcf); do
       ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/popgen/snp
       $ProgDir/similarity_percentage.py $Vcf
   done
 ```
-
+<!--
 Visualise the output as heatmap and clustering dendrogram
 ```bash
 Isolate="589"
-for Log in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*distance.log); do
+for Log in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*distance.log); do
   ProgDir=/projects/oldhome/armita/git_repos/emr_repos/scripts/popgen/snp
   Rscript --vanilla $ProgDir/distance_matrix.R $Log
   mv Rplots.pdf analysis_aa/popgen/SNP_calling/vs_${Isolate}/.
 done
-```
+``` -->
 
 Identify SNPs in gene models:
 
@@ -610,7 +645,6 @@ cp $Gff $SnpEff/data/${DbName}/genes.gff
 
 #Build database using GFF3 annotation
 java -jar $SnpEff/snpEff.jar build -gff3 -v ${DbName}
-
 ```
 
 Annotate VCF files
@@ -620,11 +654,11 @@ Isolate="589"
 DbName="Ps589v1.0"
 CurDir=/projects/oldhome/groups/harrisonlab/project_files/Pichia
 cd $CurDir
-  for Vcf in $(ls analysis_aa/popgen/SNP_calling/vs_${Isolate}/*_qfiltered_presence*.recode.vcf); do
+  for Vcf in $(ls analysis_aa/popgen/SNP_calling/*/vs_${Isolate}/*_qfiltered_presence*.recode.vcf); do
     echo $Vcf
     filename=$(basename "$Vcf")
     Prefix=${filename%.vcf}
-    OutDir=$(ls -d analysis_aa/popgen/SNP_calling/vs_${Isolate})
+    OutDir=$(dirname $Vcf)
     SnpEff=/projects/oldhome/sobczm/bin/snpEff
     java -Xmx4g -jar $SnpEff/snpEff.jar -v -ud 0 ${DbName} $Vcf > $OutDir/"$Prefix"_annotated.vcf
     mv snpEff_genes.txt $OutDir/snpEff_genes_"$Prefix".txt
@@ -653,4 +687,15 @@ cd $CurDir
 done
 ```
 All Gene CDS nonsyn syn
-27	9	9	7	2
+14	4	4	3	1
+
+```bash
+cat gene_pred/interproscan/P.stipitis/589/interproscan_out/fungap_out_prot.faa.tsv | grep -e 'gene_02300' -e 'gene_03751' -e 'gene_04075' > analysis_aa/popgen/SNP_calling/591_vs_589/vs_589/591_vs_589_ipr_annotations.tsv
+```
+
+Download data:
+
+```bash
+scp -r emr_cluster:/projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis_aa/popgen/SNP_calling/591_vs_589/vs_589 .
+scp -r emr_cluster:/projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis_aa/popgen/SNP_calling/589_vs_CBS6054/vs_CBS6054 .
+```

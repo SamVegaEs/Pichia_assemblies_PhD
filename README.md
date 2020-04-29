@@ -640,6 +640,37 @@ for StrainPath in $(ls -d raw_dna/paired/*/*); do
   done
 ```
 
+
+Calculate sequnce coverage for illumina data:
+
+```bash
+for RawData in $(ls qc_dna/paired/*/*/*/*q.gz | grep -v 'appended'); do
+echo $RawData;
+GenomeSz=16
+OutDir=$(dirname $RawData | sed 's/paired/tmp/g')
+mkdir -p $OutDir
+ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/dna_qc;
+sbatch $ProgDir/slurm_count_nuc.sh $GenomeSz $RawData $OutDir
+done
+
+
+  for StrainDir in $(ls -d qc_dna/tmp/*/*); do
+    Strain=$(basename $StrainDir)
+    printf "$Strain\t"
+    for File in $(ls $StrainDir/*/*.txt); do
+      echo $(basename $File);
+      cat $File | tail -n1 | rev | cut -f2 -d ' ' | rev;
+    done | grep -v '.txt' | awk '{ SUM += $1} END { print SUM }'
+  done
+```
+
+```
+589	102.76
+591	76.43
+594	106.91
+
+```
+
 5. Pilon assembly correction: Assemblies were polished using Pilon
 
 ```bash
@@ -1671,4 +1702,39 @@ Fasta=$(ls gene_pred/fungap/P.stipitis/589/fungap_out/fungap_out_prot.faa)
 OutDir=$(dirname $Fasta | sed 's/fungap/interproscan/g')
 ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/feature_annotation/interproscan
 sbatch $ProgDir/slurm_interproscan.sh $Fasta $OutDir
+```
+
+# Assembly stats were collected for comparison to the reference assembly:
+
+
+7. Quast and busco were run to assess the effects of pilon on assembly quality:
+
+```bash
+conda activate fungap
+for Assembly in $(ls assembly/misc_publications/P.stipitis/*/* | grep -e 'pichia.AssembledScaffolds.fasta' -e 'GCF_000209165.1_ASM20916v1_genomic.fna' | grep -v '.fai'); do
+  Strain=$(echo $Assembly | rev | cut -f2 -d '/' | rev)
+  Organism=$(echo $Assembly | rev | cut -f3 -d '/' | rev)  
+  echo "$Organism - $Strain"
+  OutDir=$(dirname $Assembly)
+  ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/seq_tools/assemblers/assembly_qc/quast
+  sbatch $ProgDir/slurm_quast.sh $Assembly $OutDir
+
+  BuscoDB=$(ls -d /projects/oldhome/groups/harrisonlab/dbBusco/ascomycota_odb9)
+  OutDir=$(dirname $Assembly)
+  ProgDir=/projects/oldhome/armita/git_repos/emr_repos/tools/gene_prediction/busco
+  # sbatch $ProgDir/slurm_busco_v3.sh $Assembly $BuscoDB $OutDir
+done
+```
+
+```bash
+printf "Filename\tComplete\tDuplicated\tFragmented\tMissing\tTotal\n"
+for File in $(ls assembly/misc_publications/P.stipitis/*/short_summary_*.txt); do  
+FileName=$(basename $File)
+Complete=$(cat $File | grep "(C)" | cut -f2)
+Duplicated=$(cat $File | grep "(D)" | cut -f2)
+Fragmented=$(cat $File | grep "(F)" | cut -f2)
+Missing=$(cat $File | grep "(M)" | cut -f2)
+Total=$(cat $File | grep "Total" | cut -f2)
+printf "$FileName\t$Complete\t$Duplicated\t$Fragmented\t$Missing\t$Total\n"
+done
 ```

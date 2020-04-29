@@ -49,9 +49,9 @@ Out2=$OutDir/"${RefName%.*}.vcf"
 gatk HaplotypeCaller \
      -R $Project/$Reference \
      -ploidy 1 \
-     -I $Project/analysis_aa/popgen/P.stipitis/589/589_vs_589_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
-     -I $Project/analysis_aa/popgen/P.stipitis/591/591_vs_589_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
-     -I $Project/analysis_aa/popgen/P.stipitis/594/594_vs_589_unmasked_sorted_nomulti_proper_sorted_nodup_rg.bam \
+     -I $Project/analysis_aa/popgen/P.stipitis/589/589_vs_589_sorted_nomulti_proper_sorted_nodup_rg.bam \
+     -I $Project/analysis_aa/popgen/P.stipitis/591/591_vs_589_sorted_nomulti_proper_sorted_nodup_rg.bam \
+     -I $Project/analysis_aa/popgen/P.stipitis/594/594_vs_589_sorted_nomulti_proper_sorted_nodup_rg.bam \
      -O $Out1
 
 #Break down complex SNPs into primitive ones with VariantsToAllelicPrimitives
