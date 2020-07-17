@@ -1,4 +1,4 @@
-#Read extraction by position.
+Read extraction by position.
 
 ```bash
 #Run at cd /projects/oldhome/groups/harrisonlab/project_files/Pichia/analysis/genome_alignment/minimap/589/vs_591. The -h option was added, because when sorting a message error appeared saying that the header was missing. 
@@ -14,7 +14,7 @@ samtools sort -n 591_C3_subtel_region_100bp.bam > 591_C3_subtel_region_100bp_sor
 bedtools bamtofastq -i 591_C3_subtel_region_100bp_sorted.bam -fq 591_C3_subtel_region_100bp_sorted.bam.fq
 ```
 
-#Read extraction by sequence.
+Read extraction by sequence.
 
 ```bash
 samtools view 589_contigs_unmasked.fa_aligned_sorted.bam | awk '$10 ~/CCGCAAGACGTGAAAAGATCCATA/' | awk '{print $1, $10}' > telseq.fa
