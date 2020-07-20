@@ -1,0 +1,24 @@
+
+### MUMMER
+```bash
+	conda create -n mummer
+	conda activate mummer
+	conda install -c bioconda mummer
+	conda deactivate
+```
+### Circos
+```bash
+	conda create -n circos
+	conda activate circos
+	conda install -c bioconda circos
+	connda deactivate
+``` (edited) 
+
+#When I need to run something in python, the conda environment has been created. 
+
+```
+conda create -n biopython
+conda activate biopython
+conda install -c anaconda biopython
+conda deactivate
+```
