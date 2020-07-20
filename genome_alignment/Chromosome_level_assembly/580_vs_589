@@ -38,3 +38,6 @@ cat $OutDir/query_ref_genome.txt | grep 'Y-11545' | grep -w -v -f tmp.txt | cut 
 echo "Order of unseen 589 contigs and remaining 589 contigs"
 cat $OutDir/query_ref_genome.txt | grep -w -v -f tmp.txt | cut -f3 -d ' '| tr -d '\n' | sed 's/589/, 589/g' | sed 's/Y-11545/, Y-11545/g'
 ```
+589_589_Chromosome_1; 589_589_Chromosome_2; 589_589_Chromosome_3; 589_589_Chromosome_4; 589_589_Chromosome_5; 589_589_Chromosome_6; 589_589_Chromosome_7; 589_589_Chromosome_8; Y-11545_chr_8.1; Y-11545_chr_7.1; Y-11545_chr_6.1; Y-11545_chr_5.1; Y-11545_chr_4.1; Y-11545_chr_3.1; Y-11545_chr_2.1; Y-11545_chr_1.2; Y-11545_chr_1.1;
+
+
