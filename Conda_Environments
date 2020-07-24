@@ -14,11 +14,19 @@
 	connda deactivate
 ``` (edited) 
 
-#When I need to run something in python, the conda environment has been created. 
+#When I need to run something in python, the conda environment has been created. I have used it to run the programs needed to generate the files used for circos. Once generated, get out of biopython and log in conda circos.
 
 ```
 conda create -n biopython
 conda activate biopython
 conda install -c anaconda biopython
 conda deactivate
+```
+
+### BWA
+```bash
+	conda create -n bwa
+	conda activate bwa
+	conda install -c bioconda bwa
+	conda deactivate
 ```
