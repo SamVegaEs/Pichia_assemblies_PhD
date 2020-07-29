@@ -30,3 +30,11 @@ conda deactivate
 	conda install -c bioconda bwa
 	conda deactivate
 ```
+
+### GATK4
+```bash
+	conda create -n gatk4
+	conda activate gatk4
+	conda install -c bioconda gatk4
+	conda deactivate
+```
