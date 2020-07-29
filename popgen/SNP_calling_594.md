@@ -1,4 +1,4 @@
-#SNP Calling: 589_vs_594
+SNP Calling: 589_vs_594
 
 Parts of the commands had been already run by Andy for the SNP Calling of 591, so I took them for 594.
 
@@ -16,7 +16,7 @@ sbatch $ProgDir/slurm_SNP_calling_594_vs_589.sh $Reference $Isolate
 cd $CurDir
 ```
 
-#Filter SNPs based on this region being present in all isolates
+Filter SNPs based on this region being present in all isolates
 
 Only retain biallelic high-quality SNPS with no missing data (for any individual) for genetic analyses below (in some cases, may allow some missing data in order to retain more SNPs, or first remove poorly sequenced individuals with too much missing data and then filter the SNPs)
 
@@ -47,7 +47,7 @@ After filtering, kept 30 out of a possible 44 Sites
 Run Time = 0.00 seconds
 ```
 
-#Collect VCF stats
+Collect VCF stats
 
 General VCF stats (remember that vcftools needs to have the PERL library exported)
 
