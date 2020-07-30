@@ -38,9 +38,9 @@ conda deactivate
 	conda install -c bioconda gatk4
 	conda deactivate
 ```
-### srna tools.
+### srna tools. It should have been sra, but it is srna (typo)
 ```
-conda create -n sra-tools
-conda activate sra-tools
+conda create -n srna-tools
+conda activate srna-tools
 conda install -c bioconda sra-tools
 ```
