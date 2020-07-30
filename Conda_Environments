@@ -38,3 +38,9 @@ conda deactivate
 	conda install -c bioconda gatk4
 	conda deactivate
 ```
+### srna tools.
+```
+conda create -n sra-tools
+conda activate sra-tools
+conda install -c bioconda sra-tools
+```
