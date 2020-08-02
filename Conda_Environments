@@ -6,7 +6,7 @@
 	conda install -c bioconda mummer
 	conda deactivate
 ```
-### Circos
+### Circos. Run from: home/vegasa/miniconda3/envs/circos/bin
 ```bash
 	conda create -n circos
 	conda activate circos
