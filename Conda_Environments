@@ -6,7 +6,7 @@
 	conda install -c bioconda mummer
 	conda deactivate
 ```
-### Circos. Run from: home/vegasa/miniconda3/envs/circos/bin
+### CIRCOS. Run from: home/vegasa/miniconda3/envs/circos/bin
 ```bash
 	conda create -n circos
 	conda activate circos
@@ -44,3 +44,14 @@ conda create -n srna-tools
 conda activate srna-tools
 conda install -c bioconda sra-tools
 ```
+
+### MINIMAP
+
+```bash
+	conda create -n minimap
+	conda activate minimap
+	conda install -c bioconda minimap2
+	conda deactivate
+```
+
+
